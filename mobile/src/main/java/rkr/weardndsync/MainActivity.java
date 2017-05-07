@@ -2,9 +2,12 @@ package rkr.weardndsync;
 
 import android.app.Activity;
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -31,7 +34,10 @@ public class MainActivity extends Activity
 
     private TextView permissionStatus;
     private TextView watchStatus;
+    private TextView watchAppStatus;
     private Button permissionButton;
+
+    private boolean watchAppFound = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +46,7 @@ public class MainActivity extends Activity
 
         permissionStatus = (TextView)findViewById(R.id.textPermissionStatus);
         watchStatus = (TextView)findViewById(R.id.textWatchStatus);
+        watchAppStatus = (TextView)findViewById(R.id.textWatchAppStatus);
         permissionButton = (Button)findViewById(R.id.buttonRequestPermission);
 
         permissionButton.setOnClickListener(new View.OnClickListener() {
@@ -57,6 +64,17 @@ public class MainActivity extends Activity
                 .build();
 
         mGoogleApiClient.connect();
+
+        registerReceiver(wearCallback, new IntentFilter(MessagingService.WEAR_CALLBACK));
+
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!watchAppFound)
+                    watchAppStatus.setText("Watch application not installed. Please use Play Store to install watch application.");
+            }
+        }, 2000);
     }
 
     @Override
@@ -68,8 +86,13 @@ public class MainActivity extends Activity
             permissionStatus.setText("Settings permission granted");
         } else {
             permissionStatus.setText("Please grant DND modification permissions to 'Wear DND Sync' application");
-            permissionButton.setEnabled(true);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        unregisterReceiver(wearCallback);
+        super.onDestroy();
     }
 
     @Override
@@ -108,6 +131,14 @@ public class MainActivity extends Activity
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d(TAG, "Connection failed");
+        watchStatus.setText("No watches connected");
     }
+
+    BroadcastReceiver wearCallback = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            watchAppFound = true;
+            watchAppStatus.setText("Watch app installed");
+        }
+    };
 }

@@ -54,6 +54,7 @@ public class SettingsReceiver extends BroadcastReceiver
         filter.addAction(NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED);
 
         SettingsReceiver receiver = new SettingsReceiver();
+
         try {
             context.unregisterReceiver(receiver);
         } catch (IllegalArgumentException e)
