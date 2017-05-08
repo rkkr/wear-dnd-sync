@@ -50,6 +50,8 @@ public class SettingsReceiver extends BroadcastReceiver
     }
 
     public static void RegisterReceiver(Context context) {
+        Log.d(TAG, "Registering DND toggle watcher");
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED);
 

@@ -3,6 +3,7 @@
     package="rkr.weardndsync">
 
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <uses-feature android:name="android.hardware.type.watch" />
 
@@ -17,7 +18,7 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".SettingsReceiver"></receiver>
+        <receiver android:name=".SettingsReceiver" />
 
         <service android:name=".MessagingService">
             <intent-filter>
@@ -29,6 +30,11 @@
                     android:scheme="wear" />
             </intent-filter>
         </service>
+
+        <activity
+            android:name=".TestActivity"
+            android:exported="true"
+            android:label="@string/title_activity_test"></activity>
     </application>
 
 </manifest>

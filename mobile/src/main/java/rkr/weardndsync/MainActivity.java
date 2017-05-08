@@ -6,10 +6,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -48,11 +50,21 @@ public class MainActivity extends Activity
         watchStatus = (TextView)findViewById(R.id.textWatchStatus);
         watchAppStatus = (TextView)findViewById(R.id.textWatchAppStatus);
         permissionButton = (Button)findViewById(R.id.buttonRequestPermission);
+        Button permissionButtonLG = (Button)findViewById(R.id.buttonRequestPermissionLG);
+        TextView textLGMessage = (TextView)findViewById(R.id.textLGMessage);
 
         permissionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+                startActivity(intent);
+            }
+        });
+
+        permissionButtonLG.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
                 startActivity(intent);
             }
         });
@@ -75,6 +87,12 @@ public class MainActivity extends Activity
                     watchAppStatus.setText("Watch application not installed. Please use Play Store to install watch application.");
             }
         }, 2000);
+
+        if (Build.MANUFACTURER.equals("LGE") || Build.MANUFACTURER.equals("unknown")) {
+            permissionButtonLG.setVisibility(View.VISIBLE);
+            textLGMessage.setVisibility(View.VISIBLE);
+            textLGMessage.setMovementMethod(LinkMovementMethod.getInstance());
+        }
     }
 
     @Override

@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">DND Sync for Wear</string>
     <string name="description">This application enables synchronisation of DND toggle from the Wear 2.0 watch to the Mobile phone.\nSynchronisation from Phone to Wearable is currently not possible due to Wear 2.0 security restrictions.</string>
+    <string name="lg_message">It seems that you have an LG phone. If button above throws an error, you will need to grant access to all notification permissions. This is a known issue in LG operating system. More info can be found <a href="http://mobile.developer.lge.com/support/forums/general/?pageMode=Detail&amp;tID=10000362&amp;listPage=%2Fsupport%2Fforums%2Fgeneral%2F">here</a>.</string>
 </resources>
