@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.method.LinkMovementMethod;
@@ -37,7 +38,6 @@ public class MainActivity extends Activity
     private TextView permissionStatus;
     private TextView watchStatus;
     private TextView watchAppStatus;
-    private Button permissionButton;
 
     private boolean watchAppFound = false;
 
@@ -49,8 +49,9 @@ public class MainActivity extends Activity
         permissionStatus = (TextView)findViewById(R.id.textPermissionStatus);
         watchStatus = (TextView)findViewById(R.id.textWatchStatus);
         watchAppStatus = (TextView)findViewById(R.id.textWatchAppStatus);
-        permissionButton = (Button)findViewById(R.id.buttonRequestPermission);
+        Button permissionButton = (Button)findViewById(R.id.buttonRequestPermission);
         Button permissionButtonLG = (Button)findViewById(R.id.buttonRequestPermissionLG);
+        Button setupWatchButton = (Button)findViewById(R.id.buttonSetupWatch);
         TextView textLGMessage = (TextView)findViewById(R.id.textLGMessage);
 
         permissionButton.setOnClickListener(new View.OnClickListener() {
@@ -69,6 +70,14 @@ public class MainActivity extends Activity
             }
         });
 
+        setupWatchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), WatchSetupActivity.class);
+                startActivity(intent);
+            }
+        });
+
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -77,14 +86,14 @@ public class MainActivity extends Activity
 
         mGoogleApiClient.connect();
 
-        registerReceiver(wearCallback, new IntentFilter(MessagingService.WEAR_CALLBACK));
+        registerReceiver(wearCallback, new IntentFilter(SettingsService.WEAR_CALLBACK));
 
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 if (!watchAppFound)
-                    watchAppStatus.setText("Watch application not installed. Please use Play Store to install watch application.");
+                    watchAppStatus.setText("Watch application not installed or not running.");
             }
         }, 2000);
 
@@ -92,6 +101,11 @@ public class MainActivity extends Activity
             permissionButtonLG.setVisibility(View.VISIBLE);
             textLGMessage.setVisibility(View.VISIBLE);
             textLGMessage.setMovementMethod(LinkMovementMethod.getInstance());
+        }
+
+        if ( PreferenceManager.getDefaultSharedPreferences(this).getBoolean("service_enabled", false)) {
+            Intent intent = new Intent(this, SettingsService.class);
+            startService(intent);
         }
     }
 
@@ -101,9 +115,9 @@ public class MainActivity extends Activity
 
         NotificationManager mNotificationManager = (NotificationManager) getApplication().getSystemService(Context.NOTIFICATION_SERVICE);
         if(mNotificationManager.isNotificationPolicyAccessGranted()) {
-            permissionStatus.setText("Settings permission granted");
+            permissionStatus.setText("DND permission granted");
         } else {
-            permissionStatus.setText("Please grant DND modification permissions to 'Wear DND Sync' application");
+            permissionStatus.setText("To enable synchronization to Phone, please grant DND modification permissions to 'Wear DND Sync' application");
         }
     }
 
@@ -149,7 +163,7 @@ public class MainActivity extends Activity
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        watchStatus.setText("No watches connected");
+        watchStatus.setText("Watch connection unavailable");
     }
 
     BroadcastReceiver wearCallback = new BroadcastReceiver() {

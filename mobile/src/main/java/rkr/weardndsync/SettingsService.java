@@ -25,6 +25,8 @@ public class SettingsService extends WearableListenerService {
     private static final String TAG = "SettingsService";
     private static final String PATH_DND_REGISTER = "/dnd_register";
     private static final String PATH_DND = "/dnd_switch";
+    public static final String WEAR_CALLBACK = "rkr.weardndsync.WEAR_CALLBACK";
+    public static final String SERVICE_STOP = "rkr.weardndsync.SERVICE_STOP";
     private GoogleApiClient mGoogleApiClient;
     private int state;
 
@@ -34,6 +36,7 @@ public class SettingsService extends WearableListenerService {
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED);
+        filter.addAction(SERVICE_STOP);
         registerReceiver(settingsReceiver, filter);
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -66,18 +69,8 @@ public class SettingsService extends WearableListenerService {
                     mNotificationManager.setInterruptionFilter(state);
                 return;
             case PATH_DND_REGISTER:
-                if (!mGoogleApiClient.isConnected())
-                    mGoogleApiClient.connect();
-
-                Wearable.MessageApi.sendMessage(mGoogleApiClient, messageEvent.getSourceNodeId(), PATH_DND_REGISTER, null).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
-                    @Override
-                    public void onResult(@NonNull MessageApi.SendMessageResult sendMessageResult) {
-                        Log.d(TAG, "Send message: " + sendMessageResult.getStatus().getStatusMessage());
-                    }
-                });
-
-                Intent intent= new Intent(this, SettingsService.class);
-                startService(intent);
+                Intent intent = new Intent(WEAR_CALLBACK);
+                sendBroadcast(intent);
                 return;
         }
     }
@@ -93,6 +86,10 @@ public class SettingsService extends WearableListenerService {
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(SERVICE_STOP)) {
+                stopSelf();
+            }
+
             if (intent.getAction().equals(NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED)) {
                 NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
                 state = mNotificationManager.getCurrentInterruptionFilter();
@@ -101,7 +98,6 @@ public class SettingsService extends WearableListenerService {
 
                 if (!mGoogleApiClient.isConnected()) {
                     mGoogleApiClient.connect();
-                    Log.e(TAG, "Google API connection failed");
                 }
 
                 Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {

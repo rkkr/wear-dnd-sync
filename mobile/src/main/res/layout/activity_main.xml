@@ -5,59 +5,70 @@
     android:layout_height="match_parent"
     tools:context="rkr.weardndsync.MainActivity">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+    <ScrollView android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/description"
-            android:layout_margin="10dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/textWatchStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:layout_margin="10dp" />
+            <TextView
+                android:id="@+id/textWatchStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:layout_margin="10dp" />
 
-        <TextView
-            android:id="@+id/textWatchAppStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:layout_margin="10dp" />
+            <TextView
+                android:id="@+id/textWatchAppStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:layout_margin="10dp" />
 
-        <TextView
-            android:id="@+id/textPermissionStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:layout_margin="10dp" />
+            <TextView
+                android:id="@+id/textPermissionStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:layout_margin="10dp" />
 
-        <Button
-            android:id="@+id/buttonRequestPermission"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Manage permissions"
-            android:layout_margin="10dp" />
+            <Button
+                android:id="@+id/buttonRequestPermission"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Manage permissions"
+                android:layout_margin="10dp" />
 
-        <TextView
-            android:id="@+id/textLGMessage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/lg_message"
-            android:visibility="gone"
-            android:layout_margin="10dp" />
+            <TextView
+                android:id="@+id/textLGMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/lg_message"
+                android:visibility="gone"
+                android:layout_margin="10dp" />
 
-        <Button
-            android:id="@+id/buttonRequestPermissionLG"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Manage permissions (for LG)"
-            android:visibility="gone"
-            android:layout_margin="10dp" />
-    </LinearLayout>
+            <Button
+                android:id="@+id/buttonRequestPermissionLG"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Manage permissions (for LG)"
+                android:visibility="gone"
+                android:layout_margin="10dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/watch_message"
+                android:layout_margin="10dp" />
+
+            <Button
+                android:id="@+id/buttonSetupWatch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Watch Setup"
+                android:layout_margin="10dp" />
+        </LinearLayout>
+    </ScrollView>
 </FrameLayout>

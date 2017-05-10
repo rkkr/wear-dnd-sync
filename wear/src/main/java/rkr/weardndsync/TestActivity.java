@@ -25,6 +25,6 @@ public class TestActivity extends Activity {
         //final AudioManager mode = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
         //mode.setRingerMode(AudioManager.RINGER_MODE_SILENT);
 
-        //adb shell settings put secure enabled_notification_listeners com.google.android.wearable.app/com.google.android.clockwork.stream.NotificationCollectorService:rkr.weardndsync/rkr.weardndsync.LGHackService
+        //adb shell settings put secure enabled_notification_listeners com.google.android.wearable.app/com.google.android.clockwork.stream.NotificationCollectorService:rkr.weardndsync/rkr.weardndsync.HackService
     }
 }

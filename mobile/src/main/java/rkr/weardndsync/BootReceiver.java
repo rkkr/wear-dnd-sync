@@ -9,7 +9,9 @@ public class BootReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        intent = new Intent(context, SettingsService.class);
-        context.startService(intent);
+        if ( PreferenceManager.getDefaultSharedPreferences(context).getBoolean("service_enabled", false)) {
+            intent = new Intent(context, SettingsService.class);
+            context.startService(intent);
+        }
     }
 }
