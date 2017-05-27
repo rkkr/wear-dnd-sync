@@ -18,14 +18,7 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".BootReceiver">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-
-        <activity android:name=".WatchSetupActivity">
-        </activity>
+        <activity android:name=".WatchSetupActivity"></activity>
 
         <service android:name=".SettingsService">
             <intent-filter>
@@ -37,7 +30,6 @@
                     android:scheme="wear" />
             </intent-filter>
         </service>
-
         <service
             android:name=".LGHackService"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
@@ -45,6 +37,15 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+
+        <receiver
+            android:name=".SettingsReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.media.RINGER_MODE_CHANGED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

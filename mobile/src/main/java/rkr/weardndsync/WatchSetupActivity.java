@@ -25,23 +25,6 @@ public class WatchSetupActivity extends Activity {
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-        Switch serviceSwitch = (Switch)findViewById(R.id.switchEnableService);
-        serviceSwitch.setChecked(prefs.getBoolean("service_enabled", false));
-
-        serviceSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                prefs.edit().putBoolean("service_enabled", isChecked).apply();
-                if (isChecked) {
-                    Intent intent = new Intent(getApplicationContext(), SettingsService.class);
-                    getApplicationContext().startService(intent);
-                } else {
-                    Intent intent = new Intent(SettingsService.SERVICE_STOP);
-                    sendBroadcast(intent);
-                }
-            }
-        });
-
         TextView watchCommand = (TextView) findViewById(R.id.textWatchCommand);
         watchCommand.setOnClickListener(new View.OnClickListener() {
             @Override

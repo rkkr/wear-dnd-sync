@@ -97,16 +97,16 @@ public class MainActivity extends Activity
             }
         }, 2000);
 
-        if (Build.MANUFACTURER.equals("LGE") || Build.MANUFACTURER.equals("unknown")) {
+        if (Build.MANUFACTURER.equals("LGE")) {
             permissionButtonLG.setVisibility(View.VISIBLE);
             textLGMessage.setVisibility(View.VISIBLE);
             textLGMessage.setMovementMethod(LinkMovementMethod.getInstance());
         }
 
-        if ( PreferenceManager.getDefaultSharedPreferences(this).getBoolean("service_enabled", false)) {
-            Intent intent = new Intent(this, SettingsService.class);
-            startService(intent);
-        }
+        //if ( PreferenceManager.getDefaultSharedPreferences(this).getBoolean("service_enabled", false)) {
+        //    Intent intent = new Intent(this, SettingsService.class);
+        //    startService(intent);
+        //}
     }
 
     @Override
@@ -115,7 +115,7 @@ public class MainActivity extends Activity
 
         NotificationManager mNotificationManager = (NotificationManager) getApplication().getSystemService(Context.NOTIFICATION_SERVICE);
         if(mNotificationManager.isNotificationPolicyAccessGranted()) {
-            permissionStatus.setText("DND permission granted");
+            permissionStatus.setText("DND permission granted for Phone");
         } else {
             permissionStatus.setText("To enable synchronization to Phone, please grant DND modification permissions to 'Wear DND Sync' application");
         }
@@ -170,7 +170,11 @@ public class MainActivity extends Activity
         @Override
         public void onReceive(Context context, Intent intent) {
             watchAppFound = true;
-            watchAppStatus.setText("Watch app installed");
+            int permission = intent.getExtras().getInt("permission");
+            if (permission == 1)
+                watchAppStatus.setText("Watch app installed, DND permission granted");
+            else
+                watchAppStatus.setText("Watch app installed, DND permission not granted");
         }
     };
 }
