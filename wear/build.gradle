@@ -7,8 +7,8 @@ android {
         applicationId "rkr.weardndsync"
         minSdkVersion 25
         targetSdkVersion 25
-        versionCode 6
-        versionName "1.6"
+        versionCode 7
+        versionName "1.7"
     }
     buildTypes {
         release {
@@ -19,5 +19,5 @@ android {
 }
 
 dependencies {
-    compile 'com.google.android.gms:play-services-wearable:10.2.4'
+    compile 'com.google.android.gms:play-services-wearable:10.2.6'
 }

@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -50,25 +51,22 @@ public class MainActivity extends Activity
         watchStatus = (TextView)findViewById(R.id.textWatchStatus);
         watchAppStatus = (TextView)findViewById(R.id.textWatchAppStatus);
         Button permissionButton = (Button)findViewById(R.id.buttonRequestPermission);
-        Button permissionButtonLG = (Button)findViewById(R.id.buttonRequestPermissionLG);
         Button setupWatchButton = (Button)findViewById(R.id.buttonSetupWatch);
         TextView textLGMessage = (TextView)findViewById(R.id.textLGMessage);
 
-        permissionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
-                startActivity(intent);
-            }
-        });
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            permissionButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+                    startActivity(intent);
+                }
+            });
+        } else {
+            permissionButton.setVisibility(View.GONE);
+            permissionStatus.setText("You are running Android version <6. Ringer mode sync support is experimental.");
+        }
 
-        permissionButtonLG.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
-                startActivity(intent);
-            }
-        });
 
         setupWatchButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -97,27 +95,33 @@ public class MainActivity extends Activity
             }
         }, 2000);
 
-        if (Build.MANUFACTURER.equals("LGE")) {
+        if (Build.MANUFACTURER.equals("LGE") && android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Button permissionButtonLG = (Button)findViewById(R.id.buttonRequestPermissionLG);
             permissionButtonLG.setVisibility(View.VISIBLE);
             textLGMessage.setVisibility(View.VISIBLE);
             textLGMessage.setMovementMethod(LinkMovementMethod.getInstance());
-        }
 
-        //if ( PreferenceManager.getDefaultSharedPreferences(this).getBoolean("service_enabled", false)) {
-        //    Intent intent = new Intent(this, SettingsService.class);
-        //    startService(intent);
-        //}
+            permissionButtonLG.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+                    startActivity(intent);
+                }
+            });
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        NotificationManager mNotificationManager = (NotificationManager) getApplication().getSystemService(Context.NOTIFICATION_SERVICE);
-        if(mNotificationManager.isNotificationPolicyAccessGranted()) {
-            permissionStatus.setText("DND permission granted for Phone");
-        } else {
-            permissionStatus.setText("To enable synchronization to Phone, please grant DND modification permissions to 'Wear DND Sync' application");
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            NotificationManager mNotificationManager = (NotificationManager) getApplication().getSystemService(Context.NOTIFICATION_SERVICE);
+            if (mNotificationManager.isNotificationPolicyAccessGranted()) {
+                permissionStatus.setText("DND permission granted for Phone.");
+            } else {
+                permissionStatus.setText("To enable synchronization to Phone, please grant DND modification permissions to 'Wear DND Sync' application.");
+            }
         }
     }
 
@@ -138,7 +142,7 @@ public class MainActivity extends Activity
                     List<Node> nodes = getConnectedNodesResult.getNodes();
 
                     if (nodes.isEmpty()) {
-                        watchStatus.setText("No watches connected");
+                        watchStatus.setText("No watches connected.");
                         return;
                     }
 
@@ -146,9 +150,9 @@ public class MainActivity extends Activity
                         @Override
                         public void onResult(@NonNull MessageApi.SendMessageResult sendMessageResult) {
                             if(sendMessageResult.getStatus().isSuccess())
-                                watchStatus.setText("Watch connected");
+                                watchStatus.setText("Watch connected.");
                             else
-                                watchStatus.setText("Watch connection failed");
+                                watchStatus.setText("Watch connection failed.");
                         }
                     });
                 }
@@ -163,7 +167,7 @@ public class MainActivity extends Activity
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        watchStatus.setText("Watch connection unavailable");
+        watchStatus.setText("Watch connection unavailable.");
     }
 
     BroadcastReceiver wearCallback = new BroadcastReceiver() {
@@ -172,9 +176,9 @@ public class MainActivity extends Activity
             watchAppFound = true;
             int permission = intent.getExtras().getInt("permission");
             if (permission == 1)
-                watchAppStatus.setText("Watch app installed, DND permission granted");
+                watchAppStatus.setText("Watch app installed, DND permission granted.");
             else
-                watchAppStatus.setText("Watch app installed, DND permission not granted");
+                watchAppStatus.setText("Watch app installed, DND permission not granted.");
         }
     };
 }

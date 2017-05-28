@@ -8,4 +8,8 @@ public class LGHackService extends NotificationListenerService {
     @Override
     public void onNotificationPosted(StatusBarNotification sbn){
     }
+
+    @Override
+    public void onNotificationRemoved(StatusBarNotification sbn){
+    }
 }

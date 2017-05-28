@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -31,8 +32,14 @@ public class SettingsReceiver extends BroadcastReceiver
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent.getAction().equals(AudioManager.RINGER_MODE_CHANGED_ACTION)) {
-            NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            mState = mNotificationManager.getCurrentInterruptionFilter();
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                mState = notificationManager.getCurrentInterruptionFilter();
+            } else {
+                AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+                mState = audioManager.getRingerMode() == AudioManager.RINGER_MODE_SILENT ?  4 : 1;
+                //INTERRUPTION_FILTER_ALARMS / INTERRUPTION_FILTER_ALL
+            }
 
             Log.d(TAG, "State: " + mState);
 

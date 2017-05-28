@@ -3,6 +3,8 @@ package rkr.weardndsync;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
+import android.os.Build;
 import android.util.Log;
 
 import com.google.android.gms.wearable.MessageEvent;
@@ -33,14 +35,23 @@ public class SettingsService extends WearableListenerService {
 
                 Log.d(TAG, "Target state: " + state);
 
-                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                if (state != NotificationManager.INTERRUPTION_FILTER_ALL)
-                    state = NotificationManager.INTERRUPTION_FILTER_ALARMS;
-                if (state == (int) mNotificationManager.getCurrentInterruptionFilter())
-                    return;
+                if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    if (state != NotificationManager.INTERRUPTION_FILTER_ALL)
+                        state = NotificationManager.INTERRUPTION_FILTER_ALARMS;
+                    if (state == (int) notificationManager.getCurrentInterruptionFilter())
+                        return;
 
-                if (mNotificationManager.isNotificationPolicyAccessGranted())
-                    mNotificationManager.setInterruptionFilter(state);
+                    if (notificationManager.isNotificationPolicyAccessGranted())
+                        notificationManager.setInterruptionFilter(state);
+                } else {
+                    AudioManager audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+                    state = state == 4 ?  AudioManager.RINGER_MODE_SILENT : AudioManager.RINGER_MODE_NORMAL;
+                    //INTERRUPTION_FILTER_ALARMS
+                    if (state == audioManager.getRingerMode())
+                        return;
+                    audioManager.setRingerMode(state);
+                }
                 return;
             case PATH_DND_REGISTER:
                 if (messageEvent.getData().length == 0)
