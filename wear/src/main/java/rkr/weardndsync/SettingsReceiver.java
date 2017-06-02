@@ -33,6 +33,9 @@ public class SettingsReceiver extends BroadcastReceiver
         if (intent.getAction().equals(AudioManager.RINGER_MODE_CHANGED_ACTION)) {
             NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             mState = mNotificationManager.getCurrentInterruptionFilter();
+            if (mState == SettingsService.targetState)
+                //This state was set by SettingsService
+                return;
 
             Log.d(TAG, "State: " + mState);
 

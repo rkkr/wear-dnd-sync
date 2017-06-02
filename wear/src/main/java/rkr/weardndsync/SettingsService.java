@@ -21,6 +21,7 @@ public class SettingsService extends WearableListenerService
     private static final String PATH_DND_REGISTER = "/dnd_register";
     private static final String PATH_DND = "/dnd_switch";
     private GoogleApiClient mGoogleApiClient;
+    public static int targetState = -1;
 
     @Override
     public void onCreate() {
@@ -41,17 +42,17 @@ public class SettingsService extends WearableListenerService
 
         switch (messageEvent.getPath()) {
             case PATH_DND:
-                int state = (int) messageEvent.getData()[0];
+                targetState = (int) messageEvent.getData()[0];
 
-                Log.d(TAG, "Target state: " + state);
+                Log.d(TAG, "Target state: " + targetState);
 
-                if (state != NotificationManager.INTERRUPTION_FILTER_ALL)
-                    state = NotificationManager.INTERRUPTION_FILTER_ALARMS;
-                if (state == (int) mNotificationManager.getCurrentInterruptionFilter())
+                if (targetState != NotificationManager.INTERRUPTION_FILTER_ALL)
+                    targetState = NotificationManager.INTERRUPTION_FILTER_ALARMS;
+                if (targetState == (int) mNotificationManager.getCurrentInterruptionFilter())
                     return;
 
                 if (mNotificationManager.isNotificationPolicyAccessGranted())
-                    mNotificationManager.setInterruptionFilter(state);
+                    mNotificationManager.setInterruptionFilter(targetState);
                 return;
             case PATH_DND_REGISTER:
                 if (!mGoogleApiClient.isConnected())
