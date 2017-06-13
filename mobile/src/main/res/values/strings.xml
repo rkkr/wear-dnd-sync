@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">DND Sync for Wear</string>
-    <string name="lg_message">It seems that you have an LG phone. If button above throws an error, you will need to grant access to all notification permissions. This is a known issue in LG operating system. More info can be found <a href="http://mobile.developer.lge.com/support/forums/general/?pageMode=Detail&amp;tID=10000362&amp;listPage=%2Fsupport%2Fforums%2Fgeneral%2F">here</a>.</string>
+    <string name="lg_message">If the button above throws an error or does not work, you can try the alternate permission</string>
     <string name="watch_message">To enable UNOFFICIAL synchronization to Watch fallow the guide below.</string>
     <string name="watch_details">Synchronization to Watch is not officially supported as Wear OS does not provide configuration options to grant notification access to applications. This access can be granted in ADB. This is undocumented functionality and may not work on all devices. If you do not know how to use ADB - you should not make these changes. You can open https://github.com/rkkr/wear-dnd-sync/blob/master/README.md to copy command from browser or click command to copy to clipboard.</string>
     <string name="watch_command">adb shell settings put secure enabled_notification_listeners com.google.android.wearable.app/com.google.android.clockwork.stream.NotificationCollectorService:rkr.weardndsync/rkr.weardndsync.HackService</string>
+    <string name="warning_message">You have an LG phone. In some LG phones part of official Notification APIs are not implemented (this is LG bug). This crashes the operating system Settings application. If this happens, please use the alternate permission button.</string>
 </resources>

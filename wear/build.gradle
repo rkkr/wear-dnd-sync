@@ -7,8 +7,8 @@ android {
         applicationId "rkr.weardndsync"
         minSdkVersion 25
         targetSdkVersion 25
-        versionCode 8
-        versionName "1.8"
+        versionCode 11
+        versionName "2.0"
     }
     buildTypes {
         release {
