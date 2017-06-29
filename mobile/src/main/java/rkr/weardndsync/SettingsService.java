@@ -13,6 +13,8 @@ import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.wearable.CapabilityInfo;
+import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
@@ -30,12 +32,17 @@ public class SettingsService extends WearableListenerService {
     public static final String WEAR_CALLBACK = "rkr.weardndsync.WEAR_CALLBACK";
 
     private GoogleApiClient mGoogleApiClient;
-    private int mState;
-    private boolean started = false;
+    private long mStateTime = 0;
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Wearable.API)
+                .build();
+
+        mGoogleApiClient.connect();
     }
 
     @Override
@@ -46,20 +53,11 @@ public class SettingsService extends WearableListenerService {
             registerReceiver(settingsReceiver, filter);
         } else if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return Service.START_NOT_STICKY;
-            //will be sticky when connect event is added
         } else {
             IntentFilter filter = new IntentFilter();
             filter.addAction(AudioManager.RINGER_MODE_CHANGED_ACTION);
             registerReceiver(settingsReceiver, filter);
         }
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Wearable.API)
-                .build();
-
-        mGoogleApiClient.connect();
-
-        started = true;
 
         return Service.START_STICKY;
     }
@@ -87,10 +85,9 @@ public class SettingsService extends WearableListenerService {
                     if (notificationManager.isNotificationPolicyAccessGranted())
                         notificationManager.setInterruptionFilter(state);
                 } else if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    Intent lgHackServiceIntent = new Intent(this, LGHackService.class);
-                    lgHackServiceIntent.setAction(LGHackService.ACTION_SET_STATE);
-                    lgHackServiceIntent.putExtra(LGHackService.EXTRA_STATE, state);
-                    this.startService(lgHackServiceIntent);
+                    Intent intent = new Intent(LGHackService.ACTION_SET_STATE);
+                    intent.putExtra(LGHackService.EXTRA_STATE, (int) messageEvent.getData()[0]);
+                    sendBroadcast(intent);
                 } else {
                     AudioManager audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
                     state = state == 4 ?  AudioManager.RINGER_MODE_SILENT : AudioManager.RINGER_MODE_NORMAL;
@@ -113,38 +110,75 @@ public class SettingsService extends WearableListenerService {
 
     @Override
     public void onDestroy() {
-        if (started) {
+        mGoogleApiClient.disconnect();
+        try {
             unregisterReceiver(settingsReceiver);
-            mGoogleApiClient.disconnect();
-            started = false;
-        }
+        } catch (Exception e) {}
+
         super.onDestroy();
+    }
+
+    @Override
+    public void onCapabilityChanged(CapabilityInfo capabilityInfo) {
+        super.onCapabilityChanged(capabilityInfo);
+        if (capabilityInfo.getNodes().isEmpty())
+            return;
+
+        Log.d(TAG, "Watch connected");
+        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.M && android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Intent intent = new Intent(LGHackService.ACTION_CONNECTED);
+            sendBroadcast(intent);
+        } else {
+            if (mGoogleApiClient.isConnected()) {
+                mGoogleApiClient.connect();
+            }
+
+            if (mStateTime == 0)
+                mStateTime = System.currentTimeMillis();
+            int state = getState(this);
+            if (state > -1) {
+                sendState(mGoogleApiClient, state, mStateTime);
+            }
+        }
+    }
+
+    private int getState(Context context) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            int state = mNotificationManager.getCurrentInterruptionFilter();
+
+            Log.d(TAG, "Get state: " + state);
+            return state;
+        }
+        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            int state = audioManager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL ?  1 : 4;
+            //INTERRUPTION_FILTER_ALL / INTERRUPTION_FILTER_ALARMS
+
+            Log.d(TAG, "Get state: " + state);
+            return state;
+        }
+
+        return -1;
     }
 
     private final BroadcastReceiver settingsReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && intent.getAction().equals(NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED)) {
-                NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-                mState = mNotificationManager.getCurrentInterruptionFilter();
-
-                Log.d(TAG, "Get state: " + mState);
-
-                sendState(mGoogleApiClient, mState);
-            }
-            if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP && intent.getAction().equals(AudioManager.RINGER_MODE_CHANGED_ACTION)) {
-                AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-                mState = audioManager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL ?  1 : 4;
-                //INTERRUPTION_FILTER_ALL / INTERRUPTION_FILTER_ALARMS
-
-                Log.d(TAG, "Get state: " + mState);
-
-                sendState(mGoogleApiClient, mState);
+            if (intent.getAction().equals(NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED) || intent.getAction().equals(AudioManager.RINGER_MODE_CHANGED_ACTION)) {
+                mStateTime = System.currentTimeMillis();
+                int state = getState(context);
+                if (state > -1)
+                    sendState(mGoogleApiClient, state);
             }
         }
     };
 
     public static void sendState(final GoogleApiClient googleApiClient, final int state) {
+        sendState(googleApiClient, state, -1);
+    }
+
+    public static void sendState(final GoogleApiClient googleApiClient, final int state, final long timeStamp) {
         if (googleApiClient == null)
             return;
 
@@ -162,9 +196,12 @@ public class SettingsService extends WearableListenerService {
                     return;
                 }
 
-                byte[] data = new byte[]{(byte) state};
+                DataMap config = new DataMap();
+                config.putInt("state", state);
+                if (timeStamp >= 0)
+                    config.putLong("timestamp", timeStamp);
                 for (Node node : nodes)
-                    Wearable.MessageApi.sendMessage(googleApiClient, node.getId(), PATH_DND, data).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
+                    Wearable.MessageApi.sendMessage(googleApiClient, node.getId(), PATH_DND, config.toByteArray()).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
                         @Override
                         public void onResult(@NonNull MessageApi.SendMessageResult sendMessageResult) {
                             Log.d(TAG, "Send message: " + sendMessageResult.getStatus().getStatusMessage());

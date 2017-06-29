@@ -7,8 +7,8 @@ android {
         applicationId "rkr.weardndsync"
         minSdkVersion 18
         targetSdkVersion 25
-        versionCode 11
-        versionName "2.0"
+        versionCode 16
+        versionName "2.2"
     }
     buildTypes {
         release {
@@ -20,5 +20,5 @@ android {
 
 dependencies {
     wearApp project(':wear')
-    compile 'com.google.android.gms:play-services-wearable:10.2.6'
+    compile 'com.google.android.gms:play-services-wearable:11.0.0'
 }

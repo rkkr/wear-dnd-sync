@@ -39,6 +39,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.media.RINGER_MODE_CHANGED" />
+                <action android:name="rkr.weardndsync.syncback" />
             </intent-filter>
         </receiver>
     </application>

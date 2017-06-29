@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.media.AudioManager;
 import android.os.Build;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
@@ -18,10 +17,12 @@ public class LGHackService extends NotificationListenerService {
 
     private static final String TAG = "LGHackService";
     public static final String ACTION_SET_STATE = "SET_STATE";
+    public static final String ACTION_CONNECTED = "CONNECTED";
     public static final String EXTRA_STATE = "STATE";
     private boolean started = false;
 
     GoogleApiClient mGoogleApiClient;
+    private long mStateTime = 0;
 
     @Override
     public void onCreate() {
@@ -40,6 +41,8 @@ public class LGHackService extends NotificationListenerService {
     public void onInterruptionFilterChanged(int interruptionFilter) {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && android.os.Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP_MR1) {
             Log.d(TAG, "Get state: " + interruptionFilter);
+
+            mStateTime = System.currentTimeMillis();
             SettingsService.sendState(mGoogleApiClient, interruptionFilter);
         }
     }
@@ -92,9 +95,14 @@ public class LGHackService extends NotificationListenerService {
                 Log.d(TAG, "Set state: " + state);
 
                 //Also force the audio mode for some devices
-                AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-                audioManager.setRingerMode(state == INTERRUPTION_FILTER_ALL ? AudioManager.RINGER_MODE_NORMAL : AudioManager.RINGER_MODE_SILENT);
-                requestInterruptionFilter(state);
+                //AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+                //audioManager.setRingerMode(state == INTERRUPTION_FILTER_ALL ? AudioManager.RINGER_MODE_NORMAL : AudioManager.RINGER_MODE_SILENT);
+                //requestInterruptionFilter(state);
+            }
+
+            if (intent.getAction().equals(ACTION_CONNECTED)) {
+                int interruptionFilter = getCurrentInterruptionFilter();
+                SettingsService.sendState(mGoogleApiClient, interruptionFilter, mStateTime);
             }
         }
     };
