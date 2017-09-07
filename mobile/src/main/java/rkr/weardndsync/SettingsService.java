@@ -27,9 +27,11 @@ import java.util.List;
 public class SettingsService extends WearableListenerService {
 
     private static final String TAG = "SettingsService";
-    private static final String PATH_DND_REGISTER = "/dnd_register";
+    public static final String PATH_DND_REGISTER = "/dnd_register";
     private static final String PATH_DND = "/dnd_switch";
-    public static final String WEAR_CALLBACK = "rkr.weardndsync.WEAR_CALLBACK";
+    public static final String PATH_LOGS = "/dnd_logs";
+    public static final String WEAR_CALLBACK_CONNECT = "rkr.weardndsync.WEAR_CALLBACK_CONNECT";
+    public static final String WEAR_CALLBACK_LOGS = "rkr.weardndsync.WEAR_CALLBACK_LOGS";
 
     private GoogleApiClient mGoogleApiClient;
     private long mStateTime = 0;
@@ -101,9 +103,23 @@ public class SettingsService extends WearableListenerService {
                 if (messageEvent.getData().length == 0)
                     return;
 
-                Intent intent = new Intent(WEAR_CALLBACK);
-                intent.putExtra("permission", (int) messageEvent.getData()[0]);
-                sendBroadcast(intent);
+                Intent connectIntent = new Intent(WEAR_CALLBACK_CONNECT);
+                if (messageEvent.getData().length > 1) {
+                    DataMap config = DataMap.fromByteArray(messageEvent.getData());
+                    connectIntent.putExtra("permission", config.getBoolean("permission"));
+                    connectIntent.putExtra("version", config.getInt("version"));
+                }
+                sendBroadcast(connectIntent);
+                Log.d(TAG, "Connected broadcast");
+                return;
+            case PATH_LOGS:
+                if (messageEvent.getData().length == 0)
+                    return;
+
+                Intent logIntent = new Intent(WEAR_CALLBACK_LOGS);
+                logIntent.putExtra("log", new String(messageEvent.getData()));
+                sendBroadcast(logIntent);
+                Log.d(TAG, "Logs broadcast");
                 return;
         }
     }

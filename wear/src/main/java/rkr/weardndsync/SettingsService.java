@@ -17,6 +17,9 @@ import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 
 public class SettingsService extends WearableListenerService {
@@ -24,6 +27,7 @@ public class SettingsService extends WearableListenerService {
     private static final String TAG = "SettingsService";
     private static final String PATH_DND_REGISTER = "/dnd_register";
     private static final String PATH_DND = "/dnd_switch";
+    public static final String PATH_LOGS = "/dnd_logs";
     public static final String SYNC_BACK = "rkr.weardndsync.syncback";
     private GoogleApiClient mGoogleApiClient;
     public static int targetState = -1;
@@ -73,15 +77,30 @@ public class SettingsService extends WearableListenerService {
                 if (!mGoogleApiClient.isConnected())
                     mGoogleApiClient.connect();
 
-                int permission = mNotificationManager.isNotificationPolicyAccessGranted() ? 1 : 0;
-                byte[] data = new byte[]{(byte) permission};
+                DataMap data = new DataMap();
+                data.putBoolean("permission", mNotificationManager.isNotificationPolicyAccessGranted());
+                data.putInt("version", BuildConfig.VERSION_CODE);
 
-                Wearable.MessageApi.sendMessage(mGoogleApiClient, messageEvent.getSourceNodeId(), PATH_DND_REGISTER, data).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
+                Wearable.MessageApi.sendMessage(mGoogleApiClient, messageEvent.getSourceNodeId(), PATH_DND_REGISTER, data.toByteArray()).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
                     @Override
                     public void onResult(@NonNull MessageApi.SendMessageResult sendMessageResult) {
                         Log.d(TAG, "Send message: " + sendMessageResult.getStatus().getStatusMessage());
                     }
                 });
+                return;
+            case PATH_LOGS:
+                if (!mGoogleApiClient.isConnected())
+                    mGoogleApiClient.connect();
+
+                StringBuilder logs = readLogs();
+
+                Wearable.MessageApi.sendMessage(mGoogleApiClient, messageEvent.getSourceNodeId(), PATH_LOGS, logs.toString().getBytes()).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
+                    @Override
+                    public void onResult(@NonNull MessageApi.SendMessageResult sendMessageResult) {
+                        Log.d(TAG, "Send message: " + sendMessageResult.getStatus().getStatusMessage());
+                    }
+                });
+                return;
         }
     }
 
@@ -108,7 +127,7 @@ public class SettingsService extends WearableListenerService {
                     Wearable.MessageApi.sendMessage(mGoogleApiClient, node.getId(), PATH_DND, data).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
                         @Override
                         public void onResult(@NonNull MessageApi.SendMessageResult sendMessageResult) {
-                            Log.d(TAG, "Send message: " + sendMessageResult.getStatus().getStatusMessage());
+                            Log.d(TAG, "Send state: " + sendMessageResult.getStatus().getStatusMessage());
                         }
                     });
             }
@@ -120,5 +139,23 @@ public class SettingsService extends WearableListenerService {
     public void onDestroy() {
         mGoogleApiClient.disconnect();
         super.onDestroy();
+    }
+
+    private static StringBuilder readLogs() {
+        StringBuilder logBuilder = new StringBuilder();
+        logBuilder.append("Watch logs:\n");
+        logBuilder.append("App version " + BuildConfig.VERSION_CODE + ":\n");
+        try {
+            Process process = Runtime.getRuntime().exec("logcat -d");
+            BufferedReader bufferedReader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()));
+
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                logBuilder.append(line + "\n");
+            }
+        } catch (IOException e) {
+        }
+        return logBuilder;
     }
 }

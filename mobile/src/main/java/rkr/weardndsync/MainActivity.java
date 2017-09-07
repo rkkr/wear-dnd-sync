@@ -3,6 +3,7 @@ package rkr.weardndsync;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -26,13 +27,15 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 
 public class MainActivity extends Activity
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = "MainActivity";
-    private static final String PATH_DND_REGISTER = "/dnd_register";
     private GoogleApiClient mGoogleApiClient;
 
     private TextView permissionStatus;
@@ -40,6 +43,7 @@ public class MainActivity extends Activity
     private TextView watchAppStatus;
 
     private boolean watchAppFound = false;
+    private StringBuilder appLogs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +55,7 @@ public class MainActivity extends Activity
         watchAppStatus = (TextView)findViewById(R.id.textWatchAppStatus);
         Button permissionButton = (Button)findViewById(R.id.buttonRequestPermission);
         Button setupWatchButton = (Button)findViewById(R.id.buttonSetupWatch);
+        Button sendLogsButton = (Button)findViewById(R.id.buttonSendLogs);
         TextView textLGMessage = (TextView)findViewById(R.id.textLGMessage);
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -121,6 +126,40 @@ public class MainActivity extends Activity
             }
         });
 
+        sendLogsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final ProgressDialog pd = new ProgressDialog(v.getContext());
+                pd.setMessage("Gathering logs");
+                pd.show();
+
+                appLogs = readLogs();
+
+                Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(
+                        new ResultCallback<NodeApi.GetConnectedNodesResult>() {
+                            @Override
+                            public void onResult(@NonNull NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
+                                for (Node node : getConnectedNodesResult.getNodes())
+                                    Wearable.MessageApi.sendMessage(mGoogleApiClient, node.getId(), SettingsService.PATH_LOGS, null);
+                            }
+                        }
+                );
+
+                final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        pd.hide();
+                        Intent sendIntent = new Intent();
+                        sendIntent.setAction(Intent.ACTION_SEND);
+                        sendIntent.putExtra(Intent.EXTRA_TEXT, appLogs.toString());
+                        sendIntent.setType("text/plain");
+                        startActivity(sendIntent);
+                    }
+                }, 3000);
+            }
+        });
+
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -129,7 +168,10 @@ public class MainActivity extends Activity
 
         mGoogleApiClient.connect();
 
-        registerReceiver(wearCallback, new IntentFilter(SettingsService.WEAR_CALLBACK));
+        IntentFilter callbackFilter = new IntentFilter();
+        callbackFilter.addAction(SettingsService.WEAR_CALLBACK_CONNECT);
+        callbackFilter.addAction(SettingsService.WEAR_CALLBACK_LOGS);
+        registerReceiver(wearCallback, callbackFilter);
 
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -179,7 +221,7 @@ public class MainActivity extends Activity
                         return;
                     }
 
-                    Wearable.MessageApi.sendMessage(mGoogleApiClient, nodes.get(0).getId(), PATH_DND_REGISTER, null).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
+                    Wearable.MessageApi.sendMessage(mGoogleApiClient, nodes.get(0).getId(), SettingsService.PATH_DND_REGISTER, null).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
                         @Override
                         public void onResult(@NonNull MessageApi.SendMessageResult sendMessageResult) {
                             if(sendMessageResult.getStatus().isSuccess())
@@ -206,17 +248,55 @@ public class MainActivity extends Activity
     BroadcastReceiver wearCallback = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            watchAppFound = true;
-            int permission = intent.getExtras().getInt("permission");
-            if (permission == 1) {
-                watchAppStatus.setText("Watch app installed, DND permission granted.");
-                //PreferenceManager.getDefaultSharedPreferences(context).edit().putBoolean("service_enabled", true).commit();
-                //intent = new Intent("rkr.weardndsync.startservice");
-                //sendBroadcast(intent);
-            } else {
-                watchAppStatus.setText("Watch app installed, DND permission not granted.");
-                //PreferenceManager.getDefaultSharedPreferences(context).edit().putBoolean("service_enabled", false).apply();
+            Log.d(TAG, "Callback to UI: " + intent.getAction());
+            if (intent.getAction().equals(SettingsService.WEAR_CALLBACK_CONNECT)) {
+                watchAppFound = true;
+                boolean permission = intent.getBooleanExtra("permission", false);
+                if (permission) {
+                    watchAppStatus.setText("Watch app installed, DND permission granted.");
+                } else {
+                    watchAppStatus.setText("Watch app installed, DND permission not granted.");
+                }
+                int watchVersion = intent.getIntExtra("version", 0);
+                if (watchVersion < BuildConfig.VERSION_CODE) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setMessage("Watch application version is older. Please update.")
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .setNegativeButton("Close", null)
+                            .show();
+                }
+                if (watchVersion > BuildConfig.VERSION_CODE) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setMessage("Phone application version is older. Please update.")
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .setNegativeButton("Close", null)
+                            .show();
+                }
+
+            }
+            else if (intent.getAction().equals(SettingsService.WEAR_CALLBACK_LOGS)) {
+                String watchLog = intent.getStringExtra("log");
+                if (appLogs != null)
+                    appLogs.append(watchLog);
             }
         }
     };
+
+    private static StringBuilder readLogs() {
+        StringBuilder logBuilder = new StringBuilder();
+        logBuilder.append("Phone logs:\n");
+        logBuilder.append("App version " + BuildConfig.VERSION_CODE + ":\n");
+        try {
+            Process process = Runtime.getRuntime().exec("logcat -d");
+            BufferedReader bufferedReader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()));
+
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                logBuilder.append(line + "\n");
+            }
+        } catch (IOException e) {
+        }
+        return logBuilder;
+    }
 }
