@@ -14,7 +14,7 @@ public class SettingsReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (intent.getAction().equals(AudioManager.RINGER_MODE_CHANGED_ACTION) || intent.getAction().equals(SettingsService.SYNC_BACK)) {
+        if (intent.getAction().equals(AudioManager.RINGER_MODE_CHANGED_ACTION)) {
             PreferenceManager.getDefaultSharedPreferences(context).edit().putLong("timestamp", System.currentTimeMillis()).apply();
 
             NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);

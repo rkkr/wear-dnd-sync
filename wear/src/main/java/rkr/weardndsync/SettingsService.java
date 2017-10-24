@@ -3,6 +3,7 @@ package rkr.weardndsync;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -28,7 +29,6 @@ public class SettingsService extends WearableListenerService {
     private static final String PATH_DND_REGISTER = "/dnd_register";
     private static final String PATH_DND = "/dnd_switch";
     public static final String PATH_LOGS = "/dnd_logs";
-    public static final String SYNC_BACK = "rkr.weardndsync.syncback";
     private GoogleApiClient mGoogleApiClient;
     public static int targetState = -1;
 
@@ -59,8 +59,7 @@ public class SettingsService extends WearableListenerService {
                     long timeStamp = PreferenceManager.getDefaultSharedPreferences(this).getLong("timestamp", 0);
                     if (timeStamp > config.getLong("timestamp")) {
                         Log.d(TAG, "Local state is newer, sync back");
-                        Intent intent = new Intent(SYNC_BACK);
-                        sendBroadcast(intent);
+                        sendState(mNotificationManager.getCurrentInterruptionFilter());
                         return;
                     }
                 }
@@ -79,7 +78,6 @@ public class SettingsService extends WearableListenerService {
 
                 DataMap data = new DataMap();
                 data.putBoolean("permission", mNotificationManager.isNotificationPolicyAccessGranted());
-                data.putInt("version", BuildConfig.VERSION_CODE);
 
                 Wearable.MessageApi.sendMessage(mGoogleApiClient, messageEvent.getSourceNodeId(), PATH_DND_REGISTER, data.toByteArray()).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
                     @Override
@@ -106,12 +104,44 @@ public class SettingsService extends WearableListenerService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (!mGoogleApiClient.isConnected())
-            mGoogleApiClient.connect();
-
         final int state = intent.getExtras().getInt("state", -1);
         if (state == -1)
             return START_NOT_STICKY;
+
+        sendState(state);
+
+        return START_NOT_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        mGoogleApiClient.disconnect();
+        super.onDestroy();
+    }
+
+    private void sendState(final int state) {
+        if (mGoogleApiClient == null) {
+            Log.e(TAG, "googleApiClient is null");
+            return;
+        }
+
+        if (!mGoogleApiClient.isConnected()) {
+            Log.e(TAG, "googleApiClient disconnected");
+            mGoogleApiClient.connect();
+
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (!mGoogleApiClient.isConnected())
+                        Log.e(TAG, "googleApiClient reconnect failed");
+                    else
+                        sendState(state);
+                }
+            }, 1000);
+
+            return;
+        }
 
         Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
             @Override
@@ -132,13 +162,6 @@ public class SettingsService extends WearableListenerService {
                     });
             }
         });
-        return START_NOT_STICKY;
-    }
-
-    @Override
-    public void onDestroy() {
-        mGoogleApiClient.disconnect();
-        super.onDestroy();
     }
 
     private static StringBuilder readLogs() {

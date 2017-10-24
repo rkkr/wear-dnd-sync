@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.os.Build;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -49,16 +50,20 @@ public class SettingsService extends WearableListenerService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "Service is started");
+
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             IntentFilter filter = new IntentFilter();
             filter.addAction(NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED);
             registerReceiver(settingsReceiver, filter);
+            forceSync();
         } else if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return Service.START_NOT_STICKY;
         } else {
             IntentFilter filter = new IntentFilter();
             filter.addAction(AudioManager.RINGER_MODE_CHANGED_ACTION);
             registerReceiver(settingsReceiver, filter);
+            forceSync();
         }
 
         return Service.START_STICKY;
@@ -107,7 +112,6 @@ public class SettingsService extends WearableListenerService {
                 if (messageEvent.getData().length > 1) {
                     DataMap config = DataMap.fromByteArray(messageEvent.getData());
                     connectIntent.putExtra("permission", config.getBoolean("permission"));
-                    connectIntent.putExtra("version", config.getInt("version"));
                 }
                 sendBroadcast(connectIntent);
                 Log.d(TAG, "Connected broadcast");
@@ -126,6 +130,8 @@ public class SettingsService extends WearableListenerService {
 
     @Override
     public void onDestroy() {
+        Log.d(TAG, "Service is stopped");
+
         mGoogleApiClient.disconnect();
         try {
             unregisterReceiver(settingsReceiver);
@@ -141,6 +147,10 @@ public class SettingsService extends WearableListenerService {
             return;
 
         Log.d(TAG, "Watch connected");
+        forceSync();
+    }
+
+    private void forceSync() {
         if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.M && android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Intent intent = new Intent(LGHackService.ACTION_CONNECTED);
             sendBroadcast(intent);
@@ -195,11 +205,26 @@ public class SettingsService extends WearableListenerService {
     }
 
     public static void sendState(final GoogleApiClient googleApiClient, final int state, final long timeStamp) {
-        if (googleApiClient == null)
+        if (googleApiClient == null) {
+            Log.e(TAG, "googleApiClient is null");
             return;
+        }
 
         if (!googleApiClient.isConnected()) {
+            Log.e(TAG, "googleApiClient disconnected");
             googleApiClient.connect();
+
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (!googleApiClient.isConnected())
+                        Log.e(TAG, "googleApiClient reconnect failed");
+                    else
+                        sendState(googleApiClient, state, timeStamp);
+                }
+            }, 1000);
+
             return;
         }
 

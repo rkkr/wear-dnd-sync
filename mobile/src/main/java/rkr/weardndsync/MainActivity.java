@@ -257,22 +257,6 @@ public class MainActivity extends Activity
                 } else {
                     watchAppStatus.setText("Watch app installed, DND permission not granted.");
                 }
-                int watchVersion = intent.getIntExtra("version", 0);
-                if (watchVersion < BuildConfig.VERSION_CODE) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                    builder.setMessage("Watch application version is older. Please update.")
-                            .setIcon(android.R.drawable.ic_dialog_alert)
-                            .setNegativeButton("Close", null)
-                            .show();
-                }
-                if (watchVersion > BuildConfig.VERSION_CODE) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                    builder.setMessage("Phone application version is older. Please update.")
-                            .setIcon(android.R.drawable.ic_dialog_alert)
-                            .setNegativeButton("Close", null)
-                            .show();
-                }
-
             }
             else if (intent.getAction().equals(SettingsService.WEAR_CALLBACK_LOGS)) {
                 String watchLog = intent.getStringExtra("log");

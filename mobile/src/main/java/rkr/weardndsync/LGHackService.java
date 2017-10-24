@@ -19,7 +19,6 @@ public class LGHackService extends NotificationListenerService {
     public static final String ACTION_SET_STATE = "SET_STATE";
     public static final String ACTION_CONNECTED = "CONNECTED";
     public static final String EXTRA_STATE = "STATE";
-    private boolean started = false;
 
     GoogleApiClient mGoogleApiClient;
     private long mStateTime = 0;
@@ -49,9 +48,12 @@ public class LGHackService extends NotificationListenerService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP || android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
+        Log.d(TAG, "Service is started");
+
+        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
             return Service.START_NOT_STICKY;
-        }
+        if (android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1)
+            return Service.START_NOT_STICKY;
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_SET_STATE);
@@ -63,18 +65,22 @@ public class LGHackService extends NotificationListenerService {
 
         mGoogleApiClient.connect();
 
-        started = true;
+        int interruptionFilter = getCurrentInterruptionFilter();
+        SettingsService.sendState(mGoogleApiClient, interruptionFilter, mStateTime);
 
         return Service.START_STICKY;
     }
 
     @Override
     public void onDestroy() {
-        if (started) {
-            unregisterReceiver(settingsReceiver);
+        Log.d(TAG, "Service is stopped");
+
+        if (mGoogleApiClient != null)
             mGoogleApiClient.disconnect();
-            started = false;
-        }
+        try {
+            unregisterReceiver(settingsReceiver);
+        } catch (Exception e) {}
+
         super.onDestroy();
     }
 
