@@ -70,6 +70,13 @@
                 android:text="Watch Setup"
                 android:layout_margin="10dp" />
 
+            <Switch
+                android:id="@+id/persistentService"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Show notification to prevent app from being suspended"
+                android:layout_margin="10dp" />
+
             <Button
                 android:id="@+id/buttonSendLogs"
                 android:layout_width="wrap_content"

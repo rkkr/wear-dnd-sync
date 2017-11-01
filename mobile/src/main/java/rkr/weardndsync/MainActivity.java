@@ -9,14 +9,18 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -50,12 +54,15 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        this.setTitle(getResources().getString(R.string.app_name));
+
         permissionStatus = (TextView)findViewById(R.id.textPermissionStatus);
         watchStatus = (TextView)findViewById(R.id.textWatchStatus);
         watchAppStatus = (TextView)findViewById(R.id.textWatchAppStatus);
         Button permissionButton = (Button)findViewById(R.id.buttonRequestPermission);
         Button setupWatchButton = (Button)findViewById(R.id.buttonSetupWatch);
         Button sendLogsButton = (Button)findViewById(R.id.buttonSendLogs);
+        Switch persistentServiceSwitch = (Switch)findViewById(R.id.persistentService);
         TextView textLGMessage = (TextView)findViewById(R.id.textLGMessage);
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -157,6 +164,18 @@ public class MainActivity extends Activity
                         startActivity(sendIntent);
                     }
                 }, 3000);
+            }
+        });
+
+        final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        persistentServiceSwitch.setChecked(pref.getBoolean("persistent", false));
+        persistentServiceSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Log.d(TAG, "Persistent switch clicked: " + isChecked);
+                pref.edit().putBoolean("persistent", isChecked).commit();
+                Intent intent = new Intent("rkr.weardndsync.startservice");
+                sendBroadcast(intent);
             }
         });
 
