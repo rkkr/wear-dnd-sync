@@ -10,10 +10,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -63,6 +66,7 @@ public class MainActivity extends Activity
         Button setupWatchButton = (Button)findViewById(R.id.buttonSetupWatch);
         Button sendLogsButton = (Button)findViewById(R.id.buttonSendLogs);
         Switch persistentServiceSwitch = (Switch)findViewById(R.id.persistentService);
+        Button disableBatteryOptimisationButton = (Button)findViewById(R.id.buttonBatteryOptimisation);
         TextView textLGMessage = (TextView)findViewById(R.id.textLGMessage);
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -178,6 +182,25 @@ public class MainActivity extends Activity
                 sendBroadcast(intent);
             }
         });
+
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            disableBatteryOptimisationButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent();
+                    String packageName = getPackageName();
+                    PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                    if (pm.isIgnoringBatteryOptimizations(packageName))
+                        intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                    else {
+                        intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                        intent.setData(Uri.parse("package:" + packageName));
+                    }
+                    startActivity(intent);
+                }
+            });
+        else
+            disableBatteryOptimisationButton.setVisibility(View.GONE);
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)

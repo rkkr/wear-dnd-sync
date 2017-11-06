@@ -78,6 +78,13 @@
                 android:layout_margin="10dp" />
 
             <Button
+                android:id="@+id/buttonBatteryOptimisation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Manage Battery Optimisations"
+                android:layout_margin="10dp" />
+
+            <Button
                 android:id="@+id/buttonSendLogs"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
