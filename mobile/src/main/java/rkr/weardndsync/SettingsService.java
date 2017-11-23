@@ -1,19 +1,15 @@
 package rkr.weardndsync;
 
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.Build;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -68,23 +64,6 @@ public class SettingsService extends WearableListenerService {
             filter.addAction(AudioManager.RINGER_MODE_CHANGED_ACTION);
             registerReceiver(settingsReceiver, filter);
             forceSync();
-        }
-
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
-        if (pref.getBoolean("persistent", false)) {
-
-            Notification notification = new NotificationCompat.Builder(this)
-                            .setContentTitle(this.getText(R.string.app_name))
-                            .setContentText("Notification to prevent app from being killed")
-                            .setSmallIcon(R.mipmap.ic_launcher)
-                            .setPriority(NotificationCompat.PRIORITY_LOW)
-                            .build();
-
-            startForeground(1, notification);
-            Log.d(TAG, "Service started in foreground");
-        } else {
-            stopForeground(true);
-            Log.d(TAG, "Service removed from foreground");
         }
 
         return Service.START_STICKY;
@@ -186,6 +165,7 @@ public class SettingsService extends WearableListenerService {
             if (state > -1) {
                 sendState(mGoogleApiClient, state, mStateTime);
             }
+            mStateTime = System.currentTimeMillis();
         }
     }
 
@@ -261,7 +241,7 @@ public class SettingsService extends WearableListenerService {
                 DataMap config = new DataMap();
                 config.putInt("state", state);
                 if (timeStamp >= 0)
-                    config.putLong("timestamp", timeStamp);
+                    config.putLong("timestamp", timeStamp + 3000);
                 for (Node node : nodes)
                     Wearable.MessageApi.sendMessage(googleApiClient, node.getId(), PATH_DND, config.toByteArray()).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
                         @Override

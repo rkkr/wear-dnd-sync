@@ -1,17 +1,13 @@
 package rkr.weardndsync;
 
-import android.app.Notification;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.os.Build;
-import android.preference.PreferenceManager;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -72,23 +68,6 @@ public class LGHackService extends NotificationListenerService {
         int interruptionFilter = getCurrentInterruptionFilter();
         SettingsService.sendState(mGoogleApiClient, interruptionFilter, mStateTime);
 
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
-        if (pref.getBoolean("persistent", false)) {
-
-            Notification notification = new NotificationCompat.Builder(this)
-                    .setContentTitle(this.getText(R.string.app_name))
-                    .setContentText("Notification to prevent app from being killed")
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setPriority(NotificationCompat.PRIORITY_LOW)
-                    .build();
-
-            startForeground(1, notification);
-            Log.d(TAG, "Service started in foreground");
-        } else {
-            stopForeground(true);
-            Log.d(TAG, "Service removed from foreground");
-        }
-
         return Service.START_STICKY;
     }
 
@@ -128,8 +107,11 @@ public class LGHackService extends NotificationListenerService {
             }
 
             if (intent.getAction().equals(ACTION_CONNECTED)) {
+                if (mStateTime == 0)
+                    mStateTime = System.currentTimeMillis();
                 int interruptionFilter = getCurrentInterruptionFilter();
                 SettingsService.sendState(mGoogleApiClient, interruptionFilter, mStateTime);
+                mStateTime = System.currentTimeMillis();
             }
         }
     };

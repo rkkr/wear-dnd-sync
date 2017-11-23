@@ -70,11 +70,11 @@
                 android:text="Watch Setup"
                 android:layout_margin="10dp" />
 
-            <Switch
-                android:id="@+id/persistentService"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/textBatteryMessage"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Show notification to prevent app from being suspended"
+                android:text="@string/battery_message"
                 android:layout_margin="10dp" />
 
             <Button
