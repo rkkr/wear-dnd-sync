@@ -64,13 +64,15 @@ public class SettingsService extends WearableListenerService {
                     }
                 }
 
-                if (targetState != NotificationManager.INTERRUPTION_FILTER_ALL)
-                    targetState = NotificationManager.INTERRUPTION_FILTER_ALARMS;
-                if (targetState == (int) mNotificationManager.getCurrentInterruptionFilter())
-                    return;
-
-                if (mNotificationManager.isNotificationPolicyAccessGranted())
-                    mNotificationManager.setInterruptionFilter(targetState);
+                if (mNotificationManager.isNotificationPolicyAccessGranted()) {
+                    if (targetState != NotificationManager.INTERRUPTION_FILTER_ALL)
+                        targetState = NotificationManager.INTERRUPTION_FILTER_ALARMS;
+                    int currentState = (int) mNotificationManager.getCurrentInterruptionFilter();
+                    if (currentState != NotificationManager.INTERRUPTION_FILTER_ALL)
+                        currentState = NotificationManager.INTERRUPTION_FILTER_ALARMS;
+                    if (currentState != targetState)
+                        mNotificationManager.setInterruptionFilter(targetState);
+                }
                 return;
             case PATH_DND_REGISTER:
                 if (!mGoogleApiClient.isConnected())

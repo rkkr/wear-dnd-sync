@@ -2,13 +2,13 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.1"
+    buildToolsVersion "26.0.2"
     defaultConfig {
         applicationId "rkr.weardndsync"
         minSdkVersion 25
         targetSdkVersion 25
-        versionCode 22
-        versionName "3.0"
+        versionCode 29
+        versionName "3.3"
     }
     buildTypes {
         release {
