@@ -155,7 +155,7 @@ public class SettingsService extends WearableListenerService {
             Intent intent = new Intent(LGHackService.ACTION_CONNECTED);
             sendBroadcast(intent);
         } else {
-            if (mGoogleApiClient.isConnected()) {
+            if (!mGoogleApiClient.isConnected()) {
                 mGoogleApiClient.connect();
             }
 
