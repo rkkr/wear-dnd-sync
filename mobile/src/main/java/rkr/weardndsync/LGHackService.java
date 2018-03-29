@@ -50,10 +50,14 @@ public class LGHackService extends NotificationListenerService {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Service is started");
 
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
+        // Do not continue running this service at all if we are not L or LMR1 as it
+        // can be invoked by the android system itself if notification access is enabled
+        // on any Android API version.
+        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP ||
+                android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
+            stopSelf();
             return Service.START_NOT_STICKY;
-        if (android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1)
-            return Service.START_NOT_STICKY;
+        }
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_SET_STATE);
