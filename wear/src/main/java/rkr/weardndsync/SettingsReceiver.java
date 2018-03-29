@@ -19,6 +19,8 @@ public class SettingsReceiver extends BroadcastReceiver {
 
             NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             int state = mNotificationManager.getCurrentInterruptionFilter();
+            if (state != NotificationManager.INTERRUPTION_FILTER_ALL)
+                state = NotificationManager.INTERRUPTION_FILTER_ALARMS;
             if (state == SettingsService.targetState && !intent.getAction().equals("rkr.weardndsync.syncback"))
                 //This state was set by SettingsService
                 return;

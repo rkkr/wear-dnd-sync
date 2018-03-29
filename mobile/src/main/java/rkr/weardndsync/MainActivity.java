@@ -206,8 +206,10 @@ public class MainActivity extends Activity
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (!watchAppFound)
+                if (!watchAppFound) {
+                    Log.w(TAG, "Watch application not installed or not running.");
                     watchAppStatus.setText("Watch application not installed or not running.");
+                }
             }
         }, 2000);
 
@@ -224,6 +226,7 @@ public class MainActivity extends Activity
             if (mNotificationManager.isNotificationPolicyAccessGranted()) {
                 permissionStatus.setText("DND permission granted for Phone.");
             } else {
+                Log.w(TAG, "Phone DND permission not granted");
                 permissionStatus.setText("To enable synchronization to Phone, please grant DND modification permissions to 'Wear DND Sync' application.");
             }
         }
@@ -284,6 +287,7 @@ public class MainActivity extends Activity
                 if (permission) {
                     watchAppStatus.setText("Watch app installed, DND permission granted.");
                 } else {
+                    Log.d(TAG, "Watch DND permission not granted");
                     watchAppStatus.setText("Watch app installed, DND permission not granted.");
                 }
             }
