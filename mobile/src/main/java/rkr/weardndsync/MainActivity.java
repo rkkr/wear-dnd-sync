@@ -1,19 +1,14 @@
 package rkr.weardndsync;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.PowerManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -61,51 +56,8 @@ public class MainActivity extends Activity
         Button permissionButton = (Button)findViewById(R.id.buttonRequestPermission);
         Button setupWatchButton = (Button)findViewById(R.id.buttonSetupWatch);
         Button sendLogsButton = (Button)findViewById(R.id.buttonSendLogs);
-        Button disableBatteryOptimisationButton = (Button)findViewById(R.id.buttonBatteryOptimisation);
-        TextView textLGMessage = (TextView)findViewById(R.id.textLGMessage);
 
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if ((Build.MANUFACTURER.equals("LGE") || Build.MANUFACTURER.equals("unknown"))) {
-                Button permissionButtonLG = (Button)findViewById(R.id.buttonRequestPermissionLG);
-                permissionButtonLG.setVisibility(View.VISIBLE);
-                textLGMessage.setVisibility(View.VISIBLE);
-
-                permissionButtonLG.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
-                        startActivity(intent);
-                    }
-                });
-
-                permissionButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
-                        builder.setTitle("LG phone detected")
-                                .setMessage(R.string.warning_message)
-                                .setIcon(android.R.drawable.ic_dialog_alert)
-                                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
-                                        startActivity(intent);
-                                    }
-                                })
-                                .setNegativeButton("Cancel", null)
-                                .show();
-                    }
-                });
-            } else {
-                permissionButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
-                        startActivity(intent);
-                    }
-                });
-            }
-        } else if (android.os.Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP_MR1) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
             permissionButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -113,15 +65,11 @@ public class MainActivity extends Activity
                     startActivity(intent);
                 }
             });
-            permissionStatus.setVisibility(View.GONE);
-            Intent intent = new Intent(this, LGHackService.class);
+            Intent intent = new Intent(this, NotificationService.class);
             startService(intent);
-        } else if (android.os.Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
-            permissionButton.setVisibility(View.GONE);
-            permissionStatus.setText("Please enable Notification permission in android settings manually.");
         } else {
             permissionButton.setVisibility(View.GONE);
-            permissionStatus.setText("You are running Android version <=4. Ringer mode sync support is experimental.");
+            permissionStatus.setText("Please enable Notification permission in android settings manually.");
         }
 
         setupWatchButton.setOnClickListener(new View.OnClickListener() {
@@ -168,27 +116,6 @@ public class MainActivity extends Activity
             }
         });
 
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            disableBatteryOptimisationButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent();
-                    String packageName = getPackageName();
-                    PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-                    if (pm.isIgnoringBatteryOptimizations(packageName))
-                        intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                    else {
-                        intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                        intent.setData(Uri.parse("package:" + packageName));
-                    }
-                    startActivity(intent);
-                }
-            });
-        else {
-            disableBatteryOptimisationButton.setVisibility(View.GONE);
-            findViewById(R.id.textBatteryMessage).setVisibility(View.GONE);
-        }
-
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -221,14 +148,11 @@ public class MainActivity extends Activity
     protected void onResume() {
         super.onResume();
 
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            NotificationManager mNotificationManager = (NotificationManager) getApplication().getSystemService(Context.NOTIFICATION_SERVICE);
-            if (mNotificationManager.isNotificationPolicyAccessGranted()) {
-                permissionStatus.setText("DND permission granted for Phone.");
-            } else {
-                Log.w(TAG, "Phone DND permission not granted");
-                permissionStatus.setText("To enable synchronization to Phone, please grant DND modification permissions to 'Wear DND Sync' application.");
-            }
+        if (checkNotificationAccessEnabled()) {
+            permissionStatus.setText("Notification permission granted for Phone.");
+        } else {
+            Log.w(TAG, "Phone DND permission not granted");
+            permissionStatus.setText("Notification permission not granted for Phone, please grant notification permissions for 'Wear DND Sync'");
         }
     }
 
@@ -315,5 +239,14 @@ public class MainActivity extends Activity
         } catch (IOException e) {
         }
         return logBuilder;
+    }
+
+    private boolean checkNotificationAccessEnabled() {
+        try {
+            return Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners").contains(getPackageName());
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

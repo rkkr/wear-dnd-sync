@@ -3,8 +3,6 @@
     package="rkr.weardndsync">
 
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
 
     <application
         android:icon="@mipmap/ic_launcher"
@@ -22,13 +20,6 @@
 
         <activity android:name=".WatchSetupActivity"></activity>
 
-        <receiver android:name=".BootReceiver">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="rkr.weardndsync.startservice" />
-            </intent-filter>
-        </receiver>
-
         <service android:name=".SettingsService">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.CAPABILITY_CHANGED" />
@@ -44,7 +35,7 @@
         </service>
 
         <service
-            android:name=".LGHackService"
+            android:name=".NotificationService"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />

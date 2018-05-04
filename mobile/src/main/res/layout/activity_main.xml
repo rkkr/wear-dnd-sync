@@ -42,22 +42,6 @@
                 android:layout_margin="10dp" />
 
             <TextView
-                android:id="@+id/textLGMessage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/lg_message"
-                android:visibility="gone"
-                android:layout_margin="10dp" />
-
-            <Button
-                android:id="@+id/buttonRequestPermissionLG"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Manage permissions (alternate)"
-                android:visibility="gone"
-                android:layout_margin="10dp" />
-
-            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/watch_message"
@@ -68,20 +52,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Watch Setup"
-                android:layout_margin="10dp" />
-
-            <TextView
-                android:id="@+id/textBatteryMessage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/battery_message"
-                android:layout_margin="10dp" />
-
-            <Button
-                android:id="@+id/buttonBatteryOptimisation"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Manage Battery Optimisations"
                 android:layout_margin="10dp" />
 
             <Button
