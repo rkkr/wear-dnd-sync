@@ -33,11 +33,6 @@ public class NotificationService extends NotificationListenerService {
     private long mStateTime = 0;
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-    }
-
-    @Override
     public void onNotificationPosted(StatusBarNotification sbn){
     }
 

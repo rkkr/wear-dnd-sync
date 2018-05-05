@@ -2,12 +2,12 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 26
-    buildToolsVersion "26.0.2"
+    buildToolsVersion "27.0.3"
     defaultConfig {
         applicationId "rkr.weardndsync"
         minSdkVersion 21
         targetSdkVersion 26
-        versionCode 33
+        versionCode 35
         versionName "4.0"
     }
     buildTypes {
@@ -20,6 +20,5 @@ android {
 }
 
 dependencies {
-    //wearApp project(':wear')
-    compile 'com.google.android.gms:play-services-wearable:11.0.0'
+    implementation 'com.google.android.gms:play-services-wearable:11.0.0'
 }

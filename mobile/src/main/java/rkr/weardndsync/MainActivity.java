@@ -158,7 +158,11 @@ public class MainActivity extends Activity
 
     @Override
     protected void onDestroy() {
-        unregisterReceiver(wearCallback);
+        try {
+            unregisterReceiver(wearCallback);
+        } catch (Exception e) {
+
+        }
         super.onDestroy();
     }
 
