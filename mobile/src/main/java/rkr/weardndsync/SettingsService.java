@@ -3,7 +3,6 @@ package rkr.weardndsync;
 import android.content.Intent;
 import android.util.Log;
 
-import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
@@ -56,16 +55,5 @@ public class SettingsService extends WearableListenerService {
                 Log.d(TAG, "Logs broadcast");
                 return;
         }
-    }
-
-    @Override
-    public void onCapabilityChanged(CapabilityInfo capabilityInfo) {
-        super.onCapabilityChanged(capabilityInfo);
-        if (capabilityInfo.getNodes().isEmpty())
-            return;
-
-        Log.d(TAG, "Watch connected");
-        Intent intent = new Intent(NotificationService.ACTION_CONNECTED);
-        sendBroadcast(intent);
     }
 }

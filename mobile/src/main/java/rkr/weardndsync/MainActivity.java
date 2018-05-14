@@ -11,18 +11,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.wearable.MessageApi;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
 import java.io.BufferedReader;
@@ -30,11 +26,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
-public class MainActivity extends Activity
-        implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class MainActivity extends Activity {
 
     private static final String TAG = "MainActivity";
-    private GoogleApiClient mGoogleApiClient;
 
     private TextView permissionStatus;
     private TextView watchStatus;
@@ -80,6 +74,7 @@ public class MainActivity extends Activity
             }
         });
 
+        final Context context = this;
         sendLogsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -89,15 +84,17 @@ public class MainActivity extends Activity
 
                 appLogs = readLogs();
 
-                Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(
-                        new ResultCallback<NodeApi.GetConnectedNodesResult>() {
-                            @Override
-                            public void onResult(@NonNull NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
-                                for (Node node : getConnectedNodesResult.getNodes())
-                                    Wearable.MessageApi.sendMessage(mGoogleApiClient, node.getId(), SettingsService.PATH_LOGS, null);
-                            }
+                Wearable.getNodeClient(context).getConnectedNodes().addOnSuccessListener(new OnSuccessListener<List<Node>>() {
+                    @Override
+                    public void onSuccess(List<Node> nodes) {
+                        if (nodes == null || nodes.isEmpty()) {
+                            Log.d(TAG, "Node not connected");
+                            return;
                         }
-                );
+                        for (Node node : nodes)
+                            Wearable.getMessageClient(context).sendMessage(node.getId(), SettingsService.PATH_LOGS, null);
+                    }
+                });
 
                 final Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
@@ -115,14 +112,6 @@ public class MainActivity extends Activity
                 }, 3000);
             }
         });
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Wearable.API)
-                .build();
-
-        mGoogleApiClient.connect();
 
         IntentFilter callbackFilter = new IntentFilter();
         callbackFilter.addAction(SettingsService.WEAR_CALLBACK_CONNECT);
@@ -154,6 +143,34 @@ public class MainActivity extends Activity
             Log.w(TAG, "Phone DND permission not granted");
             permissionStatus.setText("Notification permission not granted for Phone, please grant notification permissions for 'Wear DND Sync'");
         }
+
+        final Context context = this;
+
+        Wearable.getNodeClient(context).getConnectedNodes().addOnSuccessListener(new OnSuccessListener<List<Node>>() {
+            @Override
+            public void onSuccess(List<Node> nodes) {
+                if (nodes.isEmpty()) {
+                    watchStatus.setText("No watches connected.");
+                    return;
+                }
+                Wearable.getMessageClient(context).sendMessage(nodes.get(0).getId(), SettingsService.PATH_DND_REGISTER, null).addOnSuccessListener(new OnSuccessListener<Integer>() {
+                    @Override
+                    public void onSuccess(Integer integer) {
+                        watchStatus.setText("Watch connected.");
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        watchStatus.setText("Watch connection failed.");
+                    }
+                });
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                watchStatus.setText("No watches connected.");
+            }
+        });
     }
 
     @Override
@@ -164,45 +181,6 @@ public class MainActivity extends Activity
 
         }
         super.onDestroy();
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.d(TAG, "Connected");
-
-        Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(
-            new ResultCallback<NodeApi.GetConnectedNodesResult>() {
-                @Override
-                public void onResult(@NonNull NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
-                    List<Node> nodes = getConnectedNodesResult.getNodes();
-
-                    if (nodes.isEmpty()) {
-                        watchStatus.setText("No watches connected.");
-                        return;
-                    }
-
-                    Wearable.MessageApi.sendMessage(mGoogleApiClient, nodes.get(0).getId(), SettingsService.PATH_DND_REGISTER, null).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
-                        @Override
-                        public void onResult(@NonNull MessageApi.SendMessageResult sendMessageResult) {
-                            if(sendMessageResult.getStatus().isSuccess())
-                                watchStatus.setText("Watch connected.");
-                            else
-                                watchStatus.setText("Watch connection failed.");
-                        }
-                    });
-                }
-            }
-        );
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        Log.d(TAG, "Connection suspended");
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        watchStatus.setText("Watch connection unavailable.");
     }
 
     BroadcastReceiver wearCallback = new BroadcastReceiver() {

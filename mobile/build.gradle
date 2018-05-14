@@ -1,24 +1,24 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 27
     buildToolsVersion "27.0.3"
     defaultConfig {
         applicationId "rkr.weardndsync"
         minSdkVersion 21
-        targetSdkVersion 26
-        versionCode 35
+        targetSdkVersion 27
+        versionCode 37
         versionName "4.0"
     }
     buildTypes {
         release {
             minifyEnabled true
-            //shrinkResources true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 }
 
 dependencies {
-    implementation 'com.google.android.gms:play-services-wearable:11.0.0'
+    implementation 'com.google.android.gms:play-services-wearable:15.0.1'
 }

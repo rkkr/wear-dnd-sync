@@ -1,44 +1,34 @@
 package rkr.weardndsync;
 
-import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Handler;
+import android.net.Uri;
 import android.service.notification.NotificationListenerService;
-import android.service.notification.StatusBarNotification;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.wearable.CapabilityClient;
+import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.DataMap;
-import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
 import java.util.List;
 
-public class NotificationService extends NotificationListenerService {
+public class NotificationService extends NotificationListenerService implements
+        CapabilityClient.OnCapabilityChangedListener {
 
     private static final String TAG = "NotificationService";
     public static final String ACTION_SET_STATE = "SET_STATE";
-    public static final String ACTION_CONNECTED = "CONNECTED";
     public static final String EXTRA_STATE = "STATE";
     public static final String PATH_DND = "/dnd_switch";
 
-    GoogleApiClient mGoogleApiClient;
     private long mStateTime = 0;
-
-    @Override
-    public void onNotificationPosted(StatusBarNotification sbn){
-    }
-
-    @Override
-    public void onNotificationRemoved(StatusBarNotification sbn){
-    }
 
     @Override
     public void onInterruptionFilterChanged(int interruptionFilter) {
@@ -49,29 +39,21 @@ public class NotificationService extends NotificationListenerService {
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "Service is started");
+    public void onCreate() {
+        Log.d(TAG, "Service is created");
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_SET_STATE);
         registerReceiver(settingsReceiver, filter);
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Wearable.API)
-                .build();
+        Wearable.getCapabilityClient(this).addListener(this, Uri.parse("wear://"), CapabilityClient.FILTER_REACHABLE);
 
-        mGoogleApiClient.connect();
-        forceSync();
-
-        return Service.START_STICKY;
     }
 
     @Override
     public void onDestroy() {
         Log.d(TAG, "Service is stopped");
-
-        if (mGoogleApiClient != null)
-            mGoogleApiClient.disconnect();
+        Wearable.getCapabilityClient(this).removeListener(this);
         try {
             unregisterReceiver(settingsReceiver);
         } catch (Exception e) {}
@@ -93,14 +75,6 @@ public class NotificationService extends NotificationListenerService {
                 Log.d(TAG, "Set state: " + state);
                 requestInterruptionFilter(state);
             }
-
-            if (intent.getAction().equals(ACTION_CONNECTED)) {
-                if (mStateTime == 0)
-                    mStateTime = System.currentTimeMillis();
-                int interruptionFilter = getCurrentInterruptionFilter();
-                sendState(interruptionFilter, mStateTime);
-                mStateTime = System.currentTimeMillis();
-            }
         }
     };
 
@@ -109,33 +83,10 @@ public class NotificationService extends NotificationListenerService {
     }
 
     private void sendState(final int state, final long timeStamp) {
-        if (mGoogleApiClient == null) {
-            Log.e(TAG, "googleApiClient is null");
-            return;
-        }
-
-        if (!mGoogleApiClient.isConnected()) {
-            Log.e(TAG, "googleApiClient disconnected");
-            mGoogleApiClient.connect();
-
-            final Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (!mGoogleApiClient.isConnected())
-                        Log.e(TAG, "googleApiClient reconnect failed");
-                    else
-                        sendState(state, timeStamp);
-                }
-            }, 1000);
-
-            return;
-        }
-
-        Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
+        final Context context = this;
+        Wearable.getNodeClient(context).getConnectedNodes().addOnSuccessListener(new OnSuccessListener<List<Node>>() {
             @Override
-            public void onResult(@NonNull NodeApi.GetConnectedNodesResult getConnectedNodesResult) {
-                List<Node> nodes = getConnectedNodesResult.getNodes();
+            public void onSuccess(List<Node> nodes) {
                 if (nodes == null || nodes.isEmpty()) {
                     Log.d(TAG, "Node not connected");
                     return;
@@ -145,21 +96,22 @@ public class NotificationService extends NotificationListenerService {
                 config.putInt("state", state);
                 if (timeStamp >= 0)
                     config.putLong("timestamp", timeStamp + 3000);
-                for (Node node : nodes)
-                    Wearable.MessageApi.sendMessage(mGoogleApiClient, node.getId(), PATH_DND, config.toByteArray()).setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
+                for (Node node : nodes) {
+                    Wearable.getMessageClient(context).sendMessage(node.getId(), PATH_DND, config.toByteArray()).addOnCompleteListener(new OnCompleteListener<Integer>() {
                         @Override
-                        public void onResult(@NonNull MessageApi.SendMessageResult sendMessageResult) {
-                            Log.d(TAG, "Send message: " + sendMessageResult.getStatus().getStatusMessage());
+                        public void onComplete(@NonNull Task<Integer> task) {
+                            Log.d(TAG, "Send message: " + task.getResult());
                         }
                     });
+                }
             }
         });
     }
 
-    private void forceSync() {
-        if (!mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.connect();
-        }
+    @Override
+    public void onCapabilityChanged(@NonNull CapabilityInfo capabilityInfo) {
+        if (capabilityInfo.getNodes() == null || capabilityInfo.getNodes().isEmpty())
+            return;
 
         if (mStateTime == 0)
             mStateTime = System.currentTimeMillis();
