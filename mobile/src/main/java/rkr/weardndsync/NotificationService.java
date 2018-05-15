@@ -9,9 +9,7 @@ import android.service.notification.NotificationListenerService;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.gms.wearable.CapabilityClient;
 import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.DataMap;
@@ -66,10 +64,12 @@ public class NotificationService extends NotificationListenerService implements
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(ACTION_SET_STATE)) {
                 int state = intent.getIntExtra(EXTRA_STATE, 1);
-                //INTERRUPTION_FILTER_ALL
                 if (state != NotificationListenerService.INTERRUPTION_FILTER_ALL)
                     state = NotificationListenerService.INTERRUPTION_FILTER_PRIORITY;
-                if (state == getCurrentInterruptionFilter())
+                int currentState = getCurrentInterruptionFilter();
+                if (currentState != NotificationListenerService.INTERRUPTION_FILTER_ALL)
+                    currentState = NotificationListenerService.INTERRUPTION_FILTER_PRIORITY;
+                if (state == currentState)
                     return;
 
                 Log.d(TAG, "Set state: " + state);
@@ -97,12 +97,7 @@ public class NotificationService extends NotificationListenerService implements
                 if (timeStamp >= 0)
                     config.putLong("timestamp", timeStamp + 3000);
                 for (Node node : nodes) {
-                    Wearable.getMessageClient(context).sendMessage(node.getId(), PATH_DND, config.toByteArray()).addOnCompleteListener(new OnCompleteListener<Integer>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Integer> task) {
-                            Log.d(TAG, "Send message: " + task.getResult());
-                        }
-                    });
+                    Wearable.getMessageClient(context).sendMessage(node.getId(), PATH_DND, config.toByteArray());
                 }
             }
         });

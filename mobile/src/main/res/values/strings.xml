@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">DND Sync for Wear</string>
     <string name="app_name_short">DND Sync</string>
-    <string name="watch_message">To enable UNOFFICIAL synchronization to Watch follow the guide below.</string>
+    <string name="watch_message">To enable synchronization to Watch follow the guide below.</string>
     <string name="watch_details">Synchronization to Watch is not officially supported as Wear OS does not provide configuration options to grant notification access to applications. This access can be granted in ADB. This is undocumented functionality and may not work on all devices. If you do not know how to use ADB - you should not make these changes. You can open https://github.com/rkkr/wear-dnd-sync/blob/master/README.md to copy command from browser or click command to copy to clipboard.</string>
     <string name="watch_command">adb shell settings put secure enabled_notification_listeners com.google.android.wearable.app/com.google.android.clockwork.stream.NotificationCollectorService:rkr.weardndsync/rkr.weardndsync.HackService</string>
 </resources>
