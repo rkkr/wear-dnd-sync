@@ -23,11 +23,11 @@ public class SettingsService extends WearableListenerService {
         if (messageEvent.getData().length == 0)
             return;
 
-        DataMap config = DataMap.fromByteArray(messageEvent.getData());
 
         switch (messageEvent.getPath()) {
             case NotificationService.PATH_DND:
-                int state = config.getInt("state");
+                DataMap config1 = DataMap.fromByteArray(messageEvent.getData());
+                int state = config1.getInt("state");
 
                 Log.d(TAG, "Target state: " + state);
 
@@ -36,10 +36,9 @@ public class SettingsService extends WearableListenerService {
                 sendBroadcast(intent);
                 return;
             case PATH_DND_REGISTER:
+                DataMap config2 = DataMap.fromByteArray(messageEvent.getData());
                 Intent connectIntent = new Intent(WEAR_CALLBACK_CONNECT);
-                if (messageEvent.getData().length > 1) {
-                    connectIntent.putExtra("permission", config.getBoolean("permission"));
-                }
+                connectIntent.putExtra("permission", config2.getBoolean("permission"));
                 sendBroadcast(connectIntent);
                 Log.d(TAG, "Connected broadcast");
                 return;
