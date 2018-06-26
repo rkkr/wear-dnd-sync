@@ -44,12 +44,12 @@ public class MainActivity extends Activity {
 
         this.setTitle(getResources().getString(R.string.app_name));
 
-        permissionStatus = (TextView)findViewById(R.id.textPermissionStatus);
-        watchStatus = (TextView)findViewById(R.id.textWatchStatus);
-        watchAppStatus = (TextView)findViewById(R.id.textWatchAppStatus);
-        Button permissionButton = (Button)findViewById(R.id.buttonRequestPermission);
-        Button setupWatchButton = (Button)findViewById(R.id.buttonSetupWatch);
-        Button sendLogsButton = (Button)findViewById(R.id.buttonSendLogs);
+        permissionStatus = findViewById(R.id.textPermissionStatus);
+        watchStatus = findViewById(R.id.textWatchStatus);
+        watchAppStatus = findViewById(R.id.textWatchAppStatus);
+        Button permissionButton = findViewById(R.id.buttonRequestPermission);
+        Button setupWatchButton = findViewById(R.id.buttonSetupWatch);
+        Button sendLogsButton = findViewById(R.id.buttonSendLogs);
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
             permissionButton.setOnClickListener(new View.OnClickListener() {
@@ -124,7 +124,7 @@ public class MainActivity extends Activity {
             public void run() {
                 if (!watchAppFound) {
                     Log.w(TAG, "Watch application not installed or not running.");
-                    watchAppStatus.setText("Watch application not installed or not running.");
+                    watchAppStatus.setText("❌ Watch application not installed or not running.");
                 }
             }
         }, 2000);
@@ -138,10 +138,10 @@ public class MainActivity extends Activity {
         super.onResume();
 
         if (checkNotificationAccessEnabled()) {
-            permissionStatus.setText("Notification permission granted for Phone.");
+            permissionStatus.setText("✅ Notification permission granted for Phone.");
         } else {
             Log.w(TAG, "Phone DND permission not granted");
-            permissionStatus.setText("Notification permission not granted for Phone, please grant notification permissions for 'Wear DND Sync'");
+            permissionStatus.setText("❌ Notification permission not granted for Phone, please grant notification permissions for 'Wear DND Sync'");
         }
 
         final Context context = this;
@@ -150,25 +150,25 @@ public class MainActivity extends Activity {
             @Override
             public void onSuccess(List<Node> nodes) {
                 if (nodes.isEmpty()) {
-                    watchStatus.setText("No watches connected.");
+                    watchStatus.setText("❌ No watches connected.");
                     return;
                 }
                 Wearable.getMessageClient(context).sendMessage(nodes.get(0).getId(), SettingsService.PATH_DND_REGISTER, null).addOnSuccessListener(new OnSuccessListener<Integer>() {
                     @Override
                     public void onSuccess(Integer integer) {
-                        watchStatus.setText("Watch connected.");
+                        watchStatus.setText("✅ Watch connected.");
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        watchStatus.setText("Watch connection failed.");
+                        watchStatus.setText("❌ Watch connection failed.");
                     }
                 });
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                watchStatus.setText("No watches connected.");
+                watchStatus.setText("❌ No watches connected.");
             }
         });
     }
@@ -191,10 +191,10 @@ public class MainActivity extends Activity {
                 watchAppFound = true;
                 boolean permission = intent.getBooleanExtra("permission", false);
                 if (permission) {
-                    watchAppStatus.setText("Watch app installed, DND permission granted.");
+                    watchAppStatus.setText("✅ Watch app installed, DND permission granted.");
                 } else {
                     Log.d(TAG, "Watch DND permission not granted");
-                    watchAppStatus.setText("Watch app installed, DND permission not granted.");
+                    watchAppStatus.setText("❌ Watch app installed, DND permission not granted.");
                 }
             }
             else if (intent.getAction().equals(SettingsService.WEAR_CALLBACK_LOGS)) {
