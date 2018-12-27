@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion "27.0.3"
+    compileSdkVersion 28
+    buildToolsVersion "28.0.3"
     defaultConfig {
         applicationId "rkr.weardndsync"
         minSdkVersion 21
-        targetSdkVersion 27
-        versionCode 41
-        versionName "4.1"
+        targetSdkVersion 28
+        versionCode 43
+        versionName "4.2"
     }
     buildTypes {
         release {
@@ -20,5 +20,5 @@ android {
 }
 
 dependencies {
-    implementation 'com.google.android.gms:play-services-wearable:15.0.1'
+    implementation 'com.google.android.gms:play-services-wearable:16.0.1'
 }
