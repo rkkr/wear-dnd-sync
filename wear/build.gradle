@@ -6,9 +6,8 @@ android {
     defaultConfig {
         applicationId "rkr.weardndsync"
         minSdkVersion 25
-        maxSdkVersion 27
         targetSdkVersion 28
-        versionCode 42
+        versionCode 44
         versionName "4.2"
     }
     buildTypes {
