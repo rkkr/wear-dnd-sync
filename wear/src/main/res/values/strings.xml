@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">DND Sync for Wear</string>
+    <string name="setup_text">Please install the phone application and follow the provided instructions to setup the DND sync</string>
 </resources>

@@ -1,9 +1,11 @@
 package rkr.weardndsync;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.service.notification.NotificationListenerService;
 import android.util.Log;
 
@@ -32,6 +34,10 @@ public class HackService extends NotificationListenerService {
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_SET_STATE);
         registerReceiver(settingsReceiver, filter);
+
+        PackageManager p = getPackageManager();
+        ComponentName componentName = new ComponentName(this, MainActivity.class);
+        p.setComponentEnabledSetting(componentName,PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
     }
 
     @Override
