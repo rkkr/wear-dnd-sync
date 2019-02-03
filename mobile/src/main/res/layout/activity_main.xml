@@ -14,6 +14,12 @@
             android:orientation="vertical">
 
             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/watch_info"
+                android:layout_margin="10dp" />
+
+            <TextView
                 android:id="@+id/textWatchStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -28,7 +34,20 @@
                 android:layout_margin="10dp" />
 
             <TextView
-                android:id="@+id/textPermissionStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/phone_permission_info"
+                android:layout_margin="10dp" />
+
+            <TextView
+                android:id="@+id/textPhonePermissionStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:layout_margin="10dp" />
+
+            <TextView
+                android:id="@+id/textPhoneServiceStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=""
@@ -38,20 +57,34 @@
                 android:id="@+id/buttonRequestPermission"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Manage permissions"
+                android:text="Phone permissions setup"
                 android:layout_margin="10dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/watch_message"
+                android:text="@string/watch_permission_info"
+                android:layout_margin="10dp" />
+
+            <TextView
+                android:id="@+id/textWatchPermissionStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
                 android:layout_margin="10dp" />
 
             <Button
                 android:id="@+id/buttonSetupWatch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Watch Setup"
+                android:text="Watch permissions Setup"
+                android:layout_margin="10dp" />
+
+            <TextView
+                android:id="@+id/textLogs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/logs_info"
                 android:layout_margin="10dp" />
 
             <Button

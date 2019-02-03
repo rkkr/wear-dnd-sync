@@ -26,6 +26,7 @@ public class NotificationService extends NotificationListenerService implements
     public static final String EXTRA_STATE = "STATE";
     public static final String PATH_DND = "/dnd_switch";
 
+    public static boolean serviceStarted = false;
     private long mStateTime = 0;
 
     @Override
@@ -40,17 +41,19 @@ public class NotificationService extends NotificationListenerService implements
     public void onCreate() {
         Log.d(TAG, "Service is created");
 
+        serviceStarted = true;
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_SET_STATE);
         registerReceiver(settingsReceiver, filter);
 
         Wearable.getCapabilityClient(this).addListener(this, Uri.parse("wear://"), CapabilityClient.FILTER_REACHABLE);
-
     }
 
     @Override
     public void onDestroy() {
         Log.d(TAG, "Service is stopped");
+        serviceStarted = false;
         Wearable.getCapabilityClient(this).removeListener(this);
         try {
             unregisterReceiver(settingsReceiver);

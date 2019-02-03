@@ -33,6 +33,8 @@ public class MainActivity extends Activity {
     private TextView permissionStatus;
     private TextView watchStatus;
     private TextView watchAppStatus;
+    private TextView watchPermissionStatus;
+    private TextView phoneServiceStatus;
 
     private boolean watchAppFound = false;
     private StringBuilder appLogs;
@@ -44,9 +46,11 @@ public class MainActivity extends Activity {
 
         this.setTitle(getResources().getString(R.string.app_name));
 
-        permissionStatus = findViewById(R.id.textPermissionStatus);
+        permissionStatus = findViewById(R.id.textPhonePermissionStatus);
         watchStatus = findViewById(R.id.textWatchStatus);
         watchAppStatus = findViewById(R.id.textWatchAppStatus);
+        watchPermissionStatus = findViewById(R.id.textWatchPermissionStatus);
+        phoneServiceStatus = findViewById(R.id.textPhoneServiceStatus);
         Button permissionButton = findViewById(R.id.buttonRequestPermission);
         Button setupWatchButton = findViewById(R.id.buttonSetupWatch);
         Button sendLogsButton = findViewById(R.id.buttonSendLogs);
@@ -116,7 +120,7 @@ public class MainActivity extends Activity {
         IntentFilter callbackFilter = new IntentFilter();
         callbackFilter.addAction(SettingsService.WEAR_CALLBACK_CONNECT);
         callbackFilter.addAction(SettingsService.WEAR_CALLBACK_LOGS);
-        registerReceiver(wearCallback, callbackFilter);
+        registerReceiver(uiCallback, callbackFilter);
 
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -128,9 +132,6 @@ public class MainActivity extends Activity {
                 }
             }
         }, 2000);
-
-        Intent intent = new Intent("rkr.weardndsync.startservice");
-        sendBroadcast(intent);
     }
 
     @Override
@@ -142,6 +143,13 @@ public class MainActivity extends Activity {
         } else {
             Log.w(TAG, "Phone DND permission not granted");
             permissionStatus.setText("❌ Notification permission not granted for Phone, please grant notification permissions for 'Wear DND Sync'");
+        }
+
+        if (NotificationService.serviceStarted) {
+            phoneServiceStatus.setText("✅ Phone service is running");
+        } else {
+            Log.w(TAG, "Phone notification service is not running");
+            phoneServiceStatus.setText("❌ Phone service is not running. If permissions is granted, please disable battery optimizations.");
         }
 
         final Context context = this;
@@ -176,25 +184,26 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         try {
-            unregisterReceiver(wearCallback);
+            unregisterReceiver(uiCallback);
         } catch (Exception e) {
 
         }
         super.onDestroy();
     }
 
-    BroadcastReceiver wearCallback = new BroadcastReceiver() {
+    BroadcastReceiver uiCallback = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "Callback to UI: " + intent.getAction());
             if (intent.getAction().equals(SettingsService.WEAR_CALLBACK_CONNECT)) {
                 watchAppFound = true;
+                watchAppStatus.setText("✅ Watch app installed");
                 boolean permission = intent.getBooleanExtra("permission", false);
                 if (permission) {
-                    watchAppStatus.setText("✅ Watch app installed, DND permission granted.");
+                    watchPermissionStatus.setText("✅ Watch DND permission granted.");
                 } else {
-                    Log.d(TAG, "Watch DND permission not granted");
-                    watchAppStatus.setText("❌ Watch app installed, DND permission not granted.");
+                    Log.w(TAG, "Watch DND permission not granted");
+                    watchPermissionStatus.setText("❌ Watch DND permission not granted.");
                 }
             }
             else if (intent.getAction().equals(SettingsService.WEAR_CALLBACK_LOGS)) {
