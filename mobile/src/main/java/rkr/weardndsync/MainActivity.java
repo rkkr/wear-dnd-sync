@@ -30,11 +30,12 @@ public class MainActivity extends Activity {
 
     private static final String TAG = "MainActivity";
 
-    private TextView permissionStatus;
     private TextView watchStatus;
     private TextView watchAppStatus;
+    private TextView phonePermissionStatus;
     private TextView watchPermissionStatus;
     private TextView phoneServiceStatus;
+    private TextView watchServiceStatus;
 
     private boolean watchAppFound = false;
     private StringBuilder appLogs;
@@ -46,11 +47,12 @@ public class MainActivity extends Activity {
 
         this.setTitle(getResources().getString(R.string.app_name));
 
-        permissionStatus = findViewById(R.id.textPhonePermissionStatus);
+        phonePermissionStatus = findViewById(R.id.textPhonePermissionStatus);
         watchStatus = findViewById(R.id.textWatchStatus);
         watchAppStatus = findViewById(R.id.textWatchAppStatus);
         watchPermissionStatus = findViewById(R.id.textWatchPermissionStatus);
         phoneServiceStatus = findViewById(R.id.textPhoneServiceStatus);
+        watchServiceStatus = findViewById(R.id.textWatchServiceStatus);
         Button permissionButton = findViewById(R.id.buttonRequestPermission);
         Button setupWatchButton = findViewById(R.id.buttonSetupWatch);
         Button sendLogsButton = findViewById(R.id.buttonSendLogs);
@@ -67,7 +69,7 @@ public class MainActivity extends Activity {
             startService(intent);
         } else {
             permissionButton.setVisibility(View.GONE);
-            permissionStatus.setText("Please enable Notification permission in android settings manually.");
+            phonePermissionStatus.setText("Please enable Notification permission in android settings manually");
         }
 
         setupWatchButton.setOnClickListener(new View.OnClickListener() {
@@ -128,7 +130,7 @@ public class MainActivity extends Activity {
             public void run() {
                 if (!watchAppFound) {
                     Log.w(TAG, "Watch application not installed or not running.");
-                    watchAppStatus.setText("❌ Watch application not installed or not running.");
+                    watchAppStatus.setText("❌ Watch application not installed or not running");
                 }
             }
         }, 2000);
@@ -139,17 +141,18 @@ public class MainActivity extends Activity {
         super.onResume();
 
         if (checkNotificationAccessEnabled()) {
-            permissionStatus.setText("✅ Notification permission granted for Phone.");
+            phonePermissionStatus.setText("✅ Notification permission granted for Phone");
         } else {
             Log.w(TAG, "Phone DND permission not granted");
-            permissionStatus.setText("❌ Notification permission not granted for Phone, please grant notification permissions for 'Wear DND Sync'");
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1)
+                phonePermissionStatus.setText("❌ Notification permission not granted for Phone");
         }
 
         if (NotificationService.serviceStarted) {
             phoneServiceStatus.setText("✅ Phone service is running");
         } else {
             Log.w(TAG, "Phone notification service is not running");
-            phoneServiceStatus.setText("❌ Phone service is not running. If permissions is granted, please disable battery optimizations.");
+            phoneServiceStatus.setText("❌ Phone service is not running. If permission is granted, please disable battery optimizations");
         }
 
         final Context context = this;
@@ -158,25 +161,25 @@ public class MainActivity extends Activity {
             @Override
             public void onSuccess(List<Node> nodes) {
                 if (nodes.isEmpty()) {
-                    watchStatus.setText("❌ No watches connected.");
+                    watchStatus.setText("❌ No watches connected");
                     return;
                 }
                 Wearable.getMessageClient(context).sendMessage(nodes.get(0).getId(), SettingsService.PATH_DND_REGISTER, null).addOnSuccessListener(new OnSuccessListener<Integer>() {
                     @Override
                     public void onSuccess(Integer integer) {
-                        watchStatus.setText("✅ Watch connected.");
+                        watchStatus.setText("✅ Watch connected");
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        watchStatus.setText("❌ Watch connection failed.");
+                        watchStatus.setText("❌ Watch connection failed");
                     }
                 });
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                watchStatus.setText("❌ No watches connected.");
+                watchStatus.setText("❌ No watches connected");
             }
         });
     }
@@ -200,10 +203,17 @@ public class MainActivity extends Activity {
                 watchAppStatus.setText("✅ Watch app installed");
                 boolean permission = intent.getBooleanExtra("permission", false);
                 if (permission) {
-                    watchPermissionStatus.setText("✅ Watch DND permission granted.");
+                    watchPermissionStatus.setText("✅ Notification permission granted for Watch");
                 } else {
                     Log.w(TAG, "Watch DND permission not granted");
-                    watchPermissionStatus.setText("❌ Watch DND permission not granted.");
+                    watchPermissionStatus.setText("❌ Notification permission not granted for Phone");
+                }
+                boolean service = intent.getBooleanExtra("service", false);
+                if (service) {
+                    watchServiceStatus.setText("✅ Watch service is running");
+                } else {
+                    Log.w(TAG, "Watch DND permission not granted");
+                    watchServiceStatus.setText("❌ Watch service is not running");
                 }
             }
             else if (intent.getAction().equals(SettingsService.WEAR_CALLBACK_LOGS)) {

@@ -53,7 +53,9 @@ public class NotificationService extends NotificationListenerService implements
     @Override
     public void onDestroy() {
         Log.d(TAG, "Service is stopped");
+
         serviceStarted = false;
+
         Wearable.getCapabilityClient(this).removeListener(this);
         try {
             unregisterReceiver(settingsReceiver);

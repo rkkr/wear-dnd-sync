@@ -41,6 +41,7 @@ public class SettingsService extends WearableListenerService {
                 DataMap data = new DataMap();
                 NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 data.putBoolean("permission", mNotificationManager.isNotificationPolicyAccessGranted());
+                data.putBoolean("service", HackService.serviceStarted);
 
                 Wearable.getMessageClient(this).sendMessage(messageEvent.getSourceNodeId(), PATH_DND_REGISTER, data.toByteArray());
                 return;

@@ -24,12 +24,15 @@ public class HackService extends NotificationListenerService {
     public static final String EXTRA_TIME = "TIME";
     public static final String PATH_DND = "/dnd_switch";
 
+    public static boolean serviceStarted = false;
     private long mStateTime = 0;
     private int mLastState = -1;
 
     @Override
     public void onCreate() {
         Log.d(TAG, "Service is created");
+
+        serviceStarted = true;
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_SET_STATE);
@@ -43,6 +46,9 @@ public class HackService extends NotificationListenerService {
     @Override
     public void onDestroy() {
         Log.d(TAG, "Service is stopped");
+
+        serviceStarted = false;
+
         try {
             unregisterReceiver(settingsReceiver);
         } catch (Exception e) {}
