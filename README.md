@@ -4,6 +4,8 @@ DND synchronization between and Android Wear watch and Android phone was removed
 
 XDA thread: https://forum.xda-developers.com/wear-os/development/app-disturb-sync-wear-2-0-t3603086
 
+This application is not available in Google Play store as it was removed due to new policies.
+
 # Support
 Phone support:
 - Android 5+ required
