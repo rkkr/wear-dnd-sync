@@ -31,17 +31,17 @@ public class SettingsService extends WearableListenerService {
                 DataMap config = DataMap.fromByteArray(messageEvent.getData());
                 targetState = config.getInt("state");
 
-                Intent intent = new Intent(HackService.ACTION_SET_STATE);
-                intent.putExtra(HackService.EXTRA_STATE, config.getInt("state"));
+                Intent intent = new Intent(NotificationService.ACTION_SET_STATE);
+                intent.putExtra(NotificationService.EXTRA_STATE, config.getInt("state"));
                 if (config.containsKey("timestamp"))
-                    intent.putExtra(HackService.EXTRA_TIME, config.getLong("timestamp"));
+                    intent.putExtra(NotificationService.EXTRA_TIME, config.getLong("timestamp"));
                 sendBroadcast(intent);
                 return;
             case PATH_DND_REGISTER:
                 DataMap data = new DataMap();
                 NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 data.putBoolean("permission", mNotificationManager.isNotificationPolicyAccessGranted());
-                data.putBoolean("service", HackService.serviceStarted);
+                data.putBoolean("service", NotificationService.serviceStarted);
 
                 Wearable.getMessageClient(this).sendMessage(messageEvent.getSourceNodeId(), PATH_DND_REGISTER, data.toByteArray());
                 return;
