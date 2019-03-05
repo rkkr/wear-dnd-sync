@@ -54,7 +54,6 @@ public class MainActivity extends Activity {
         phoneServiceStatus = findViewById(R.id.textPhoneServiceStatus);
         watchServiceStatus = findViewById(R.id.textWatchServiceStatus);
         Button permissionButton = findViewById(R.id.buttonRequestPermission);
-        Button setupWatchButton = findViewById(R.id.buttonSetupWatch);
         Button sendLogsButton = findViewById(R.id.buttonSendLogs);
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
@@ -71,14 +70,6 @@ public class MainActivity extends Activity {
             permissionButton.setVisibility(View.GONE);
             phonePermissionStatus.setText("Please enable Notification permission in android settings manually");
         }
-
-        setupWatchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), WatchSetupActivity.class);
-                startActivity(intent);
-            }
-        });
 
         final Context context = this;
         sendLogsButton.setOnClickListener(new View.OnClickListener() {

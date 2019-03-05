@@ -81,20 +81,6 @@
                 android:layout_margin="10dp" />
 
             <Button
-                android:id="@+id/buttonSetupWatch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Watch permissions Setup"
-                android:layout_margin="10dp" />
-
-            <TextView
-                android:id="@+id/textLogs"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/logs_info"
-                android:layout_margin="10dp" />
-
-            <Button
                 android:id="@+id/buttonSendLogs"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
