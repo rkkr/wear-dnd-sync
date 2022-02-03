@@ -34,6 +34,7 @@ Watch support:
 - `adb shell settings put secure enabled_notification_listeners com.google.android.wearable.app/com.google.android.clockwork.stream.NotificationCollectorService:rkr.weardndsync/rkr.weardndsync.NotificationService`
 - Start Phone app, make sure all checks pass
 - If checks don't pass:
+  - Try running `adb shell cmd notification allow_listener rkr.weardndsync/rkr.weardndsync.NotificationService` after reconnecting Watch to ADB
   - You made an error in your setup
   - Your device is not supported
   - Check the logs that can be extracted with `Send Logs` button
